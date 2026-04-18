@@ -24,7 +24,7 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await api.post('/login', credentials);
+            const response = await api.post('/api/login', credentials);
             const { access_token, user } = response.data;
             login(user, access_token); 
             if (user.email_verified_at === null) {

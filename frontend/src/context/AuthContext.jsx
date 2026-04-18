@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('token');
         if (token) {
             // Verifier l-token m3a l-backend
-            api.get('/user')
+            api.get('/api/user')
                 .then(res => setUser(res.data))
                 .catch(() => localStorage.clear())
                 .finally(() => setLoading(false));
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        api.post('/logout').finally(() => {
+        api.post('/api/logout').finally(() => {
             localStorage.clear();
             setUser(null);
             window.location.href = '/auth/login';

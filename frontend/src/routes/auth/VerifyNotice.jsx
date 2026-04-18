@@ -19,7 +19,7 @@ const VerifyNotice = () => {
                 const token = localStorage.getItem('token');
                 if (!token) return;
 
-                const response = await api.get('/auth/user-status');
+                const response = await api.get('/api/auth/user-status');
 
                 if (response.data.user.email_verified_at) {
                     clearInterval(checkVerification);
@@ -55,7 +55,7 @@ const VerifyNotice = () => {
     const handleResendEmail = async () => {
         setLoading(true);
         try {
-            await api.post('/email/verification-notification');
+            await api.post('/api/email/verification-notification');
             showNotification("Lien envoyé ! Vérifiez votre boîte mail.", "success");
         } catch (error) {
             showNotification("Erreur ou trop de tentatives.", "error");

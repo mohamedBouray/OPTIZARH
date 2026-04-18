@@ -49,7 +49,7 @@ const Register = () => {
         };
 
         try {
-            const response = await api.post('/register', payload);
+            const response = await api.post('/api/register', payload);
             
             if (response.status === 201) {
                 const token = response.data.access_token; 

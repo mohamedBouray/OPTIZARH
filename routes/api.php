@@ -7,6 +7,8 @@ use App\Http\Controllers\API\SuperAdminController;
 use App\Http\Controllers\API\RCARController;
 use App\Http\Controllers\API\EmployeeController;
 use App\Http\Controllers\API\IndemniteController;
+use App\Http\Controllers\API\ActivityLogController;
+use App\Http\Controllers\API\RetraiteController;
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -35,7 +37,9 @@ Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:sanctum')->group(function () {
-    
+    Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+
+
     // Account & Status
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', function (Request $request) {
@@ -48,52 +52,47 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware(['throttle:6,1'])
         ->name('verification.send');
 
-    /*
-    |----------------------------------------------------------------------
-    | 1. SuperAdmin: Access WITHOUT Email Verification
-    |----------------------------------------------------------------------
-    */
-    Route::middleware('role:superadmin')->group(function () {
-        
-        // Employees Management
-        Route::prefix('employees')->group(function () {
-            Route::get('/stats', [EmployeeController::class, 'stats']); 
-            Route::get('/export-pdf', [EmployeeController::class, 'exportPDF']);
-            Route::get('/', [EmployeeController::class, 'index']);          
-            Route::post('/', [EmployeeController::class, 'store']);         
-            Route::get('/{id}', [EmployeeController::class, 'show']);      
-            Route::put('/{id}', [EmployeeController::class, 'update']);    
-            Route::delete('/{id}', [EmployeeController::class, 'destroy']);
-        });
-
-        // RCAR Management
-        Route::prefix('rcar')->group(function () {
-            Route::get('/', [RCARController::class, 'index']);
-                Route::get('/', [RCARController::class, 'index']);
-                Route::post('/', [RCARController::class, 'store']);
-                Route::put('/{id}', [RCARController::class, 'update']);
-                Route::delete('/{id}/{user_id?}', [RCARController::class, 'destroy']);
-        });
-
-        // Indemnites
-        Route::apiResource('indemnites', IndemniteController::class);
-    });
-
-    /*
-    |----------------------------------------------------------------------
-    | 2. Other Roles: Access ONLY IF Verified
-    |----------------------------------------------------------------------
-    */
     Route::middleware(['verified'])->group(function () {
+        Route::middleware('role:superadmin')->group(function () {
+        
+            // Employees Management
+            Route::prefix('employees')->group(function () {
+                Route::get('/stats', [EmployeeController::class, 'stats']);
+                Route::get('/export-pdf', [EmployeeController::class, 'exportPDF']);
+
+                Route::get('/', [EmployeeController::class, 'index']);          
+                Route::post('/', [EmployeeController::class, 'store']);         
+                Route::get('/{id}', [EmployeeController::class, 'show']);      
+                Route::put('/{id}', [EmployeeController::class, 'update']);    
+                Route::delete('/{id}', [EmployeeController::class, 'destroy']);
+            });
+
+            // RCAR Management
+            Route::prefix('rcar')->group(function () {
+                Route::get('/', [RCARController::class, 'index']);
+                    Route::get('/', [RCARController::class, 'index']);
+                    Route::post('/', [RCARController::class, 'store']);
+                    Route::put('/{id}', [RCARController::class, 'update']);
+                    Route::delete('/{id}/{user_id?}', [RCARController::class, 'destroy']);
+            });
+
+            // Indemnites
+            Route::apiResource('indemnites', IndemniteController::class);
+            Route::patch('/indemnites/{id}/toggle-statut', [App\Http\Controllers\API\IndemniteController::class, 'toggleStatut']);
+
+
+
+            Route::get('/retraite', [RetraiteController::class, 'index']);
+            Route::post('/retraite/update', [RetraiteController::class, 'update']);
+        });
         
         // Role: Admin
         Route::middleware('role:admin')->group(function () {
-            // Dir hna l-routes li khass l-Admin idirhom
         });
 
         // Role: RH
         Route::middleware('role:rh')->group(function () {
-            // Dir hna l-routes li khass l-RH idirhom
+
         });
     });
 });

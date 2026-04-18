@@ -20,7 +20,9 @@ import SuperAdminLayout from '../src/layout/SuperAdminLayout';
 import SuperAdminDashboard from './routes/superadmin/Dashboard'; 
 import Users from './routes/superadmin/users';
 import RCAR from './routes/superadmin/ParametrageRCAR';
-import Indemente from './routes/superadmin/Indementes'
+import Indemente from './routes/superadmin/Indementes';
+import Cotisation from './routes/superadmin/Cotisation';
+import Retraite from './routes/superadmin/Retraite';
 
 //Admin 
 import AdminDashboard from './routes/Admin/Dashboard';
@@ -164,6 +166,8 @@ function App() {
                             <Route path="Users" element={<Users/>}/>
                             <Route path="RCAR" element={<RCAR/>} />
                             <Route path="Indementes" element={<Indemente/>} />
+                            <Route path="Cotisation" element={<Cotisation/>} />
+                            <Route path="Retraite" element={<Retraite/>} />
                         </Route>
                     </Route>
 

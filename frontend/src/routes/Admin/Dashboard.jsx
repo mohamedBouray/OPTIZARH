@@ -1,56 +1,67 @@
 import React from 'react';
 
-const DashboardLayout = ({ title, role, children }) => {
+const ProfilePage = () => {
+    // 1. Kan-parse-i l-object 'user' li 3ndek f l-image
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
     
+    // 2. Kan-jbdou l-data l-hqi9iya
+    const fullName = userData.full_name || "Utilisateur"; 
+    const email = userData.email || "Email non spécifié";
+    const role = localStorage.getItem('role') || "Rôle non défini";
+
     const handleLogout = () => {
         localStorage.clear();
         window.location.href = '/login';
     };
 
     return (
-        <div className="flex h-screen bg-gray-100 font-sans">
-            {/* Sidebar */}
-            <div className="w-64 bg-indigo-900 text-white flex flex-col">
-                <div className="p-6 text-2xl font-bold border-b border-indigo-800">
-                    Optiza<span className="text-indigo-400">RH</span>
-                </div>
-                <nav className="flex-1 p-4 space-y-2">
-                    <div className="px-4 py-2 bg-indigo-800 rounded-lg cursor-pointer">Tableau de bord</div>
-                    <div className="px-4 py-2 hover:bg-indigo-800 rounded-lg cursor-pointer transition-colors">Profil</div>
-                    <div className="px-4 py-2 hover:bg-indigo-800 rounded-lg cursor-pointer transition-colors">Paramètres</div>
-                </nav>
-                <div className="p-4 border-t border-indigo-800">
-                    <button 
-                        onClick={handleLogout}
-                        className="w-full bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 font-medium py-2 px-4 rounded-lg transition-all"
-                    >
-                        Déconnexion
-                    </button>
-                </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
-                <header className="bg-white shadow-sm p-4 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold uppercase px-2 py-1 bg-indigo-100 text-indigo-700 rounded">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans text-gray-900">
+            <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                
+                {/* Header b-color indigo pro */}
+                <div className="bg-indigo-600 p-8 text-center text-white">
+                    <div className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-2xl mx-auto flex items-center justify-center text-4xl font-bold mb-4 shadow-inner">
+                        {fullName.charAt(0).toUpperCase()}
+                    </div>
+                    <h2 className="text-2xl font-bold tracking-tight">{fullName}</h2>
+                    <div className="mt-2">
+                        <span className="px-4 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-white/10">
                             {role}
                         </span>
-                        <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">
-                            {localStorage.getItem('user_name')?.charAt(0) || 'U'}
-                        </div>
                     </div>
-                </header>
+                </div>
 
-                {/* Content Area */}
-                <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
-                    {children}
-                </main>
+                {/* Infos Section */}
+                <div className="p-8 space-y-8">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest text-left">Nom et Prénom</span>
+                        <p className="text-lg font-semibold border-b border-gray-50 pb-2 text-left">{fullName}</p>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest text-left">Adresse Electronique</span>
+                        <p className="text-lg font-semibold border-b border-gray-50 pb-2 text-left">{email}</p>
+                    </div>
+
+                    <div className="pt-4">
+                        <button 
+                            onClick={handleLogout}
+                            className="w-full py-4 bg-red-500 text-white font-bold rounded-2xl shadow-lg shadow-red-200 hover:bg-red-600 hover:shadow-none transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Se déconnecter
+                        </button>
+                    </div>
+                </div>
+
+                <div className="bg-gray-50/50 p-6 text-center">
+                    <p className="text-gray-400 text-[10px] font-medium tracking-widest uppercase">OptizaRH • Guelmim</p>
+                </div>
             </div>
         </div>
     );
 };
 
-export default DashboardLayout;
+export default ProfilePage;

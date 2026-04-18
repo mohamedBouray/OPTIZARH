@@ -4,7 +4,7 @@ import {
     Loader2, Trash2, ChevronDown, Save, Sliders
 } from 'lucide-react';
 
-import { rcarApi } from '../../lib/apis/rcar';
+import api from '../../lib/apis/axiosConfig';
 import { useNotification } from '../../context/NotificationContext';
 
 const ParametrageRCAR = () => {
@@ -27,7 +27,7 @@ const ParametrageRCAR = () => {
     const loadData = async (targetYear = null) => {
         try {
             setLoading(true);
-            const response = await rcarApi.getAll();
+            const response = await api.get('/api/rcar');
             const data = response.data;
             setConfigData(data);
             
@@ -55,7 +55,7 @@ const ParametrageRCAR = () => {
     const handleUpdate = async () => {
         if (!currentConfig.id) return;
         try {
-            await rcarApi.update(currentConfig.id, currentConfig);
+            await api.put(`/api/rcar/${currentConfig.id}`, currentConfig);
             showNotification(`L'annes  ${currentConfig.annee} enregistré !`, "success");
             loadData();
         } catch (err) {
@@ -66,7 +66,7 @@ const ParametrageRCAR = () => {
     const handleDelete = async (id, year) => {
         if (window.confirm(`Voulez-vous vraiment supprimer cette anees ${year} ?`)) {
             try {
-                await rcarApi.delete(id);
+                await api.delete(`/api/rcar/${id}`);
                 showNotification(`L'annes ${year} supprimé`, "success"); 
                 const newData = configData.filter(c => c.id !== id);
                 setConfigData(newData);
@@ -95,7 +95,7 @@ const ParametrageRCAR = () => {
                 salariale_active: true, 
                 patronale_active: true 
             };
-            await rcarApi.create(payload);
+            await api.post('/api/rcar', payload);
             const yearCreated = newYearInput;
 
             showNotification(`L'année ${yearCreated} ajoutée !`, "success");

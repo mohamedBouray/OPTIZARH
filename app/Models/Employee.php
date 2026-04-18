@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
@@ -10,7 +8,7 @@ class Employee extends Model
     protected $fillable = [
         'prenom',
         'nom',
-        'email' => 'required|email|unique:employees',
+        'email',
         'telephone',
         'date_naissance',
         'adresse',

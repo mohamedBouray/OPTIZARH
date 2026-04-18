@@ -1,15 +1,12 @@
 import axios from 'axios';
 const api = axios.create({
-    baseURL: 'http://localhost:8000/api',
+    baseURL: 'http://localhost:8000',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     }
 });
-export const getCsrfToken = () => {
-    return axios.get('http://localhost:8000/sanctum/csrf-cookie', { withCredentials: true });
-};
 
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
@@ -20,6 +17,7 @@ api.interceptors.request.use((config) => {
 }, (error) => {
     return Promise.reject(error);
 });
+
 
 api.interceptors.response.use(
     (response) => response,
@@ -48,7 +46,7 @@ api.interceptors.response.use(
         }
 
         if (status === 500) {
-            console.error("Internal Server Error: Check l-Backend dyalk (logs/laravel.log)");
+            console.error("Internal Server Error: Check your Backend (logs/laravel.log)");
         }
 
         return Promise.reject(error);

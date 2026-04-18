@@ -14,7 +14,7 @@ const ForgotPassword = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await api.post('/forgot-password', { email });
+            await api.post('/api/forgot-password', { email });
             showNotification("Lien envoyé ! Vérifiez votre boîte mail.", "success");
         } catch (error) {
             showNotification(

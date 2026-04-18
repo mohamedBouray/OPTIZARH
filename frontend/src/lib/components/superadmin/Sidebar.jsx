@@ -16,9 +16,9 @@ export default function Sidebar() {
     { label: "Utilisateurs", icon: <Users size={18} />, path: "/SuperAdmin/users" },
     { label: "RCAR", icon: <Shield size={18} />, path: "/SuperAdmin/rcar" },
     { label: "Indemnités", icon: <Banknote size={18} />, path: "/SuperAdmin/Indementes" },
+    { label: "Cotisation", icon: <Wallet size={18} />, path: "/SuperAdmin/Cotisation" },
+    { label: "Retraite & Tamdid", icon: <FileText size={18} />, path: "/SuperAdmin/Retraite" },
 
-    { label: "Cotisation", icon: <Wallet size={18} />, path: "/SuperAdmin/cotisation" },
-    { label: "Retraite & Tamdid", icon: <FileText size={18} />, path: "/SuperAdmin/retraite" },
     { label: "Crédit", icon: <CreditCard size={18} />, path: "/SuperAdmin/credit" },
     { label: "SNTL", icon: <Truck size={18} />, path: "/SuperAdmin/sntl" },
     { label: "Social", icon: <Users2 size={18} />, path: "/SuperAdmin/social" },

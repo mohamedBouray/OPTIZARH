@@ -24,7 +24,7 @@ const VerifyEmail = () => {
 
         try {
 
-            const cleanPath = callbackUrl.replace('http://localhost:8000/api', '');
+            const cleanPath = callbackUrl.replace('http://localhost:8000', '');
             const response = await api.get(cleanPath);
             if (response.data.user) {
                 const user = response.data.user;

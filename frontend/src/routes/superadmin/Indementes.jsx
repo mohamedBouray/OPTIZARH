@@ -34,7 +34,7 @@ export default function Indementes() {
     // 2. Fetch Data from DB
     const fetchIndemnites = async () => {
         try {
-            const response = await api.get('/indemnites');
+            const response = await api.get('/api/indemnites');
             const years = response.data.available_years || [];
             setIndemnites(response.data.data || []); 
             setAvailableYears(years);
@@ -50,7 +50,7 @@ export default function Indementes() {
 
     const fetchActivities = async (newLimit = 10) => {
         try {
-            const response = await api.get(`/activity-logs?limit=${newLimit}`);
+            const response = await api.get(`/api/activity-logs?limit=${newLimit}`);
             setActivities(response.data.data); 
             setLimit(newLimit);
         } catch (error) {
@@ -74,7 +74,7 @@ export default function Indementes() {
     // 4. Handlers
     const handleToggleStatut = async (id) => {
         try {
-            await api.patch(`/indemnites/${id}/toggle-statut`);
+            await api.patch(`/api/indemnites/${id}/toggle-statut`);
             setIndemnites(prev => 
                 prev.map(item => 
                     item.id === id ? { ...item, statut: !item.statut } : item
@@ -89,7 +89,7 @@ export default function Indementes() {
     const handleDelete = async (id) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer cette indemnité")) {
             try {
-                await api.delete(`/indemnites/${id}`);
+                await api.delete(`/api/indemnites/${id}`);
                 fetchIndemnites();
                 fetchActivities();
             } catch (error) {
@@ -118,9 +118,9 @@ export default function Indementes() {
     const handleSave = async () => {
         try {
             if (isEditing) {
-                await api.put(`/indemnites/${currentId}`, formData);
+                await api.put(`/api/indemnites/${currentId}`, formData);
             } else {
-                await api.post('/indemnites', formData);
+                await api.post('/api/indemnites', formData);
             }
             setIsModalOpen(false);
             fetchIndemnites();
