@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from "../../lib/apis/axiosConfig";
 import { icons } from '../../lib/icons/icons';
-
 export default function Logs() {
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [limit, setLimit] = useState(20);
+    const [limit, setLimit] = useState(10);
 
-    const fetchActivities = async (newLimit = 20) => {
+    const fetchActivities = async (newLimit = 10) => {
         setLoading(true);
         try {
             const response = await api.get(`/api/activity-logs?limit=${newLimit}`);
@@ -22,7 +21,7 @@ export default function Logs() {
     };
 
     useEffect(() => {
-        fetchActivities(20);
+        fetchActivities(10);
     }, []);
 
     const filteredLogs = activities.filter(log => {
@@ -54,7 +53,7 @@ export default function Logs() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    <span className="absolute left-3 top-2.5 text-gray-400">{icons.search}</span>
                 </div>
             </div>
 
@@ -125,12 +124,24 @@ export default function Logs() {
 
                 {/* Pagination Footer */}
                 <div className="p-8 bg-gray-50/50 border-t border-gray-50 text-center dark:bg-white/[0.01] dark:border-white/5">
-                    <button 
+                {limit === 10 && activities.length >= 10 ? (
+                <button 
+                    onClick={() => fetchActivities(100)} 
+                    className="text-indigo-600 font-black text-xs uppercase tracking-widest hover:underline dark:text-indigo-400">
+                    Voir tout l'historique
+                </button>
+            ) : limit > 10 ? (
+                <button 
+                    onClick={() => fetchActivities(10)} 
+                    className="text-gray-400 font-black text-xs uppercase tracking-widest hover:underline dark:text-gray-600">
+                    Réduire à 10 derniers
+                </button>
+            ) : null}
+                    {/* <button 
                         onClick={() => fetchActivities(limit + 20)}
-                        className="px-6 py-2 bg-white border border-gray-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm dark:bg-[#111] dark:border-white/10 dark:text-gray-400 dark:hover:bg-white dark:hover:text-black"
-                    >
+                        className="px-6 py-2 bg-white border border-gray-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm dark:bg-[#111] dark:border-white/10 dark:text-gray-400 dark:hover:bg-white dark:hover:text-black">
                         {loading ? "Chargement..." : "Charger plus"}
-                    </button>
+                    </button> */}
                 </div>
             </div>
         </div>

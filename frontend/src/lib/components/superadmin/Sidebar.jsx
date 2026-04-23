@@ -26,7 +26,7 @@ export default function Sidebar() {
 
   const adminItems = [
     { label: "Logs", icon: <History size={18} />, path: "/SuperAdmin/Logs" },
-    { label: "Paramètres", icon: <Settings size={18} />, path: "/SuperAdmin/settings" },
+    { label: "Paramètres", icon: <Settings size={18} />, path: "/SuperAdmin/Parametres" },
   ];
 
   const handleLogout = async () => {

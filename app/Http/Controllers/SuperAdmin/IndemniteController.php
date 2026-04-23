@@ -11,10 +11,9 @@ class IndemniteController extends Controller
 {
    public function store(Request $request) {
     try {
-        // 1. Validation darouria bach t-7mi l-app
         $validated = $request->validate([
             'nom'           => 'required|string',
-            'type'          => 'required', // FIXE awla POURCENTAGE
+            'type'          => 'required', 
             'valeur'        => 'required|numeric',
             'annee'         => 'required|integer',
             'tous_employes' => 'boolean',
@@ -27,9 +26,8 @@ class IndemniteController extends Controller
         // 2. Création
         $indemnite = Indemnite::create($validated);
 
-        // 3. Activity Log (khass ikoun sécurisé)
         ActivityLog::create([
-            'user_id'     => auth()->id() ?? 1, // Ila makanch session, dima sta3mel id=1
+            'user_id'     => auth()->id() ?? 1,
             'titre'       => 'Ajout',
             'action_type' => 'CREATE',
             'description' => "Ajout de l'indemnité " . $indemnite->nom,
@@ -54,7 +52,6 @@ class IndemniteController extends Controller
         ], 200);
     }
 
-    // store logic dialek déjà mziana, ghir t-yqed men l-ActivityLog model namespace
 public function update(Request $request, $id) {
     try {
         $indemnite = Indemnite::findOrFail($id);

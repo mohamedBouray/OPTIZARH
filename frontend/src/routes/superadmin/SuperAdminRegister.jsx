@@ -3,6 +3,7 @@ import { superAdminApi } from '../../lib/apis/superadmin';
 import loginImg from '/LoginImg.jpg';
 import { Eye, EyeOff } from 'lucide-react'; 
 import { useNotification } from '../../context/NotificationContext';
+import api from "../../lib/apis/axiosConfig";
 
 const SuperAdminRegister = () => {
     const { showNotification } = useNotification();
@@ -39,7 +40,7 @@ const SuperAdminRegister = () => {
         }
         setLoading(true);
         try {
-            const res = await superAdminApi.setup(form);
+            const res = await api.post('/api/setup-superadmin', form);
             if (res.data && res.data.token) {
 
                 localStorage.setItem('token', res.data.token);

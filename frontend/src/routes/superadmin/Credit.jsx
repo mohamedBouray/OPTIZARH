@@ -23,7 +23,7 @@ const GestionCredits = () => {
     useEffect(() => { fetchCredits(); }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm("waaach ghadiii tmsseee7 "))
+        if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet credit ? "))
              return;
         try {
             await api.delete(`/api/credits/${id}`);

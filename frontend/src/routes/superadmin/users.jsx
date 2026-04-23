@@ -220,12 +220,8 @@ export default function Users() {
                                     </td>
                                     <td className="p-[15px_20px]">
                                         <div className="flex gap-2.5">
-                                            <button onClick={() => handleEdit(emp)} className="p-1.5 rounded-md text-[#4B42C8] dark:text-indigo-400 bg-[#EEEDFE] dark:bg-indigo-500/10 hover:scale-110 transition-transform">
-                                                {icons.edit}
-                                            </button>
-                                            <button onClick={() => handleDelete(emp.id)} className="p-1.5 rounded-md text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 hover:scale-110 transition-transform">
-                                                {icons.delete}
-                                            </button>
+                                            <button onClick={() => handleEdit(emp)}className="mr-3 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer">✎</button>
+                                            <button onClick={() => handleDelete(emp.id)} className="hover:text-red-500 transition cursor-pointer">🗑</button>
                                         </div>
                                     </td>
                                 </tr>

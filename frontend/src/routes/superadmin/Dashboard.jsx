@@ -38,14 +38,14 @@ const Dashboard = () => {
         <Wallet className="w-5 h-5" />      
     ];
 
-    if (loading) return (
-        <div className="h-screen flex items-center justify-center bg-[#fdfdff] dark:bg-[#080808]">
-            <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
-                <div className="text-indigo-600 font-black tracking-widest text-sm uppercase animate-pulse">OptizaRH System</div>
-            </div>
-        </div>
-    );
+    // if (loading) return (
+    //     <div className="h-screen flex items-center justify-center bg-[#fdfdff] dark:bg-[#080808]">
+    //         <div className="flex flex-col items-center gap-4">
+    //             <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
+    //             <div className="text-indigo-600 font-black tracking-widest text-sm uppercase animate-pulse">OptizaRH System</div>
+    //         </div>
+    //     </div>
+    // );
 
     return (
         <div className=" bg-[#fdfdff] dark:bg-[#080808] min-h-screen transition-colors duration-500">
@@ -59,14 +59,6 @@ const Dashboard = () => {
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-widest mt-1 opacity-70">
                         Bienvenue sur votre centre de pilotage
                     </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#121212] border border-slate-200 dark:border-[#262626] rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-all cursor-pointer shadow-sm">
-                        <Activity size={16} /> Rapport Global
-                    </button>
-                    <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-500/30 cursor-pointer hover:scale-105 transition-all">
-                        <Bell size={20} />
-                    </div>
                 </div>
             </div>
 
@@ -113,10 +105,10 @@ const Dashboard = () => {
                             <h3 className="text-xl font-black text-slate-900 dark:text-white">Répartition des Cotisations</h3>
                             <p className="text-xs text-slate-400 font-medium italic mt-1">Comparaison des taux par organisme</p>
                         </div>
-                        <div className="flex bg-slate-50 dark:bg-[#1c1c1c] p-1 rounded-xl">
+                        {/* <div className="flex bg-slate-50 dark:bg-[#1c1c1c] p-1 rounded-xl">
                             <button className="px-4 py-1.5 bg-white dark:bg-[#262626] text-indigo-600 dark:text-white text-[10px] font-bold rounded-lg shadow-sm">Mensuel</button>
                             <button className="px-4 py-1.5 text-slate-400 text-[10px] font-bold">Annuel</button>
-                        </div>
+                        </div> */}
                     </div>
                     
                     <div className="h-[320px] w-full">
@@ -211,7 +203,7 @@ const modules = [
     { title: 'RCAR', desc: 'Gestion automatisée des cotisations de retraite collective et affiliation des agents.', status: 'ACTIF' },
     { title: 'IR Fiscalité', desc: 'Calcul précis de l\'impôt sur le revenu basé sur les derniers barèmes légaux.', status: 'ACTIF' },
     { title: 'Indemnités', desc: 'Moteur de calcul des primes, indemnités de fonction et frais de déplacement.', status: 'ACTIF' },
-    { title: 'SNTL Mission', desc: 'Planification logistique, ordres de mission et gestion des véhicules de service.', status: 'CONFIGURE' },
+    { title: 'SNTL Mission', desc: 'Planification logistique, ordres de mission et gestion des véhicules de service.', status: 'ACTIF' },
     { title: 'Retraite', desc: 'Simulations de fin de carrière et accompagnement au départ à la retraite.', status: 'ACTIF' },
     { title: 'Crédit Social', desc: 'Traitement des demandes de prêts sociaux et avances sur salaire.', status: 'ACTIF' },
 ];

@@ -32,6 +32,7 @@ import SNTL from "./routes/superadmin/SNTL";
 import Social from "./routes/superadmin/Social";
 import IR from "./routes/superadmin/GestionIR";
 import Logs from "./routes/superadmin/Logs";
+import Parametres from './routes/superadmin/Settings'
 
 //Admin 
 import AdminDashboard from './routes/Admin/Dashboard';
@@ -108,9 +109,6 @@ const PublicRoute = ({ children, isFirstRun }) => {
     return children;
 };
 
-
-
-
 function AppContent() {
     const { setLoading } = useLoading();
     const [isFirstRun, setIsFirstRun] = useState(null);
@@ -180,6 +178,7 @@ function AppContent() {
                             <Route path="Social" element={<Social />} />
                             <Route path="GesionIR" element={<IR/>}/>
                             <Route path="Logs" element={<Logs/>}/>
+                            <Route path="Parametres" element={<Parametres/>}/>
                         </Route>
                     </Route>
 

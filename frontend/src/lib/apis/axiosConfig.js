@@ -9,7 +9,6 @@ const api = axios.create({
     },
 });
 
-// 🔥 Loading handler (connect React)
 let setLoadingGlobal = null;
 
 export const attachLoadingHandler = (fn) => {
@@ -28,7 +27,6 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-
         if (setLoadingGlobal) setLoadingGlobal(true);
 
         return config;

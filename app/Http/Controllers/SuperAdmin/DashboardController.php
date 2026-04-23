@@ -15,16 +15,10 @@ class DashboardController extends Controller
     {
         try {
             $anneeActuelle = date('Y');
-
-            // 1. Fetch Employees (ISLAH: 'statut' blast 'status')
             $employees = Employee::where('statut', 'ACTIF')->get();
             $totalMasseSalariale = $employees->sum('salaire_base') ?: 0;
-
-            // 2. Calcul des Crédits (Dynamique)
-            $totalCreditsAmount = Credit::sum('max_amount') ?: 0; // K-i-jbed sum dyal max_amount
+            $totalCreditsAmount = Credit::sum('max_amount') ?: 0; 
             $countCredits = Credit::count();
-
-            // 3. Calcul RCAR DYNAMIQUE
             $rcarConfig = ParametrageRCAR::where('annee', $anneeActuelle)->first();
             $totalRCAR = 0;
             $tauxRCAR_Display = 0;
@@ -36,11 +30,8 @@ class DashboardController extends Controller
                     $cotisationEmp = 0;
 
                     if ($rcarConfig->salariale_active) {
-                        // Régime Général (avec plafond)
                         $baseRG = $rcarConfig->salariale_rg_plafond ? min($salaire, $rcarConfig->salariale_rg_plafond) : $salaire;
                         $cotisationEmp += $baseRG * ($rcarConfig->salariale_rg_taux / 100);
-
-                        // Régime Complémentaire
                         $baseRC = $rcarConfig->salariale_rc_plafond ? min($salaire, $rcarConfig->salariale_rc_plafond) : $salaire;
                         $cotisationEmp += $baseRC * ($rcarConfig->salariale_rc_taux / 100);
                     }
@@ -63,13 +54,9 @@ class DashboardController extends Controller
                     }
                 }
             }
-
-            // 5. Preparation dyal l-Graph (Cotisation Stats)
-            // Bach may-t-l3ch error 'map' f React, khass hada dima ikoun array
             $cotisationStats = [
                 ['name' => 'RCAR', 'taux' => (float)$tauxRCAR_Display],
-                ['name' => 'IR (Moy)', 'taux' => 15.0], // Moyenne estimée
-                ['name' => 'Assurance', 'taux' => 2.5],
+                ['name' => 'IR', 'taux' => 15.0], 
             ];
 
             return response()->json([

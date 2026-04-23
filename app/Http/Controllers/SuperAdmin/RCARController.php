@@ -25,7 +25,6 @@ class RCARController extends Controller {
         ];
     }
 
-    // Helper bach n-ssajlo l-log bla ma n-ktbo l-code bzzaf d l-merrat
     private function logRCAR($action, $type, $desc) {
         try {
             ActivityLog::create([
