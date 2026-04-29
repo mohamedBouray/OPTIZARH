@@ -20,6 +20,7 @@ use App\Http\Controllers\SuperAdmin\CreditController;
 use App\Http\Controllers\SuperAdmin\IrController;
 use App\Http\Controllers\SuperAdmin\GestionEtatController;
 use App\Http\Controllers\SuperAdmin\GestionIndemniteController;
+use App\Http\Controllers\SuperAdmin\SntlSettingController;
 
 
 /*
@@ -145,6 +146,13 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/settings/{annee}', [IrController::class, 'updateSettings']);
                 Route::delete('/settings/{annee}', [IrController::class, 'destroy']);
                 Route::get('/export/{annee}', [IrController::class, 'exportPdf']);
+            });
+
+            Route::prefix('sntl')->group(function () {
+                Route::get('/configs', [SntlSettingController::class, 'index']);
+                Route::post('/save', [SntlSettingController::class, 'store']);
+                Route::delete('/configs/{id}', [SntlSettingController::class, 'destroy']);
+                
             });
 
             Route::post('/save-cotisations', [CotisationController::class, 'store']);
