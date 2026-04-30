@@ -40,7 +40,7 @@ class GestionEtatController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'year' => 'required|integer|min:2000|max:2100',
+            'year' => 'required|integer|min:1900|max:2200',
             'roles' => 'required|array|min:1',
             'roles.*.name' => 'required|string|min:1',
             'roles.*.grades' => 'required|array|min:1',
@@ -91,7 +91,6 @@ class GestionEtatController extends Controller
                 Cache::forget('salary_years');
                 Cache::forget('starred_roles');
                 
-                // Log l'activité
                 $this->logActivity(
                     'Configuration des salaires',
                     'CREATE',
@@ -129,7 +128,6 @@ class GestionEtatController extends Controller
             
             $pdf->setPaper('a4', 'landscape');
             
-            // Log l'activité
             $this->logActivity(
                 'Export PDF',
                 'EXPORT',
@@ -144,6 +142,219 @@ class GestionEtatController extends Controller
                 'ERROR',
                 "Erreur lors de l'export PDF pour l'année {$year}: " . $e->getMessage()
             );
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // ==========================================================
+    //              GESTION DES ANNÉES (NOUVEAU)
+    // ==========================================================
+
+    // Ajouter une nouvelle année
+    public function addYear(Request $request)
+    {
+        $request->validate([
+            'year' => 'required|integer|min:1900|max:2200|unique:salary_years,year',
+            'copy_from_year' => 'nullable|integer|exists:salary_years,year'
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request) {
+                $year = $request->year;
+                $copyFromYear = $request->copy_from_year;
+
+                // Créer l'année
+                $salaryYear = SalaryYear::create([
+                    'year' => $year,
+                    'is_active' => true
+                ]);
+
+                // Si on doit copier depuis une autre année
+                if ($copyFromYear) {
+                    $sourceYear = SalaryYear::where('year', $copyFromYear)
+                        ->with(['roles.grades.echelles.echelons'])
+                        ->first();
+
+                    if ($sourceYear) {
+                        foreach ($sourceYear->roles as $role) {
+                            $newRole = $salaryYear->roles()->create([
+                                'name' => $role->name,
+                                'is_starred' => $role->is_starred
+                            ]);
+                            
+                            foreach ($role->grades as $grade) {
+                                $newGrade = $newRole->grades()->create([
+                                    'name' => $grade->name
+                                ]);
+                                
+                                foreach ($grade->echelles as $echelle) {
+                                    $newEchelle = $newGrade->echelles()->create([
+                                        'level' => $echelle->level
+                                    ]);
+                                    
+                                    foreach ($echelle->echelons as $echelon) {
+                                        $newEchelle->echelons()->create([
+                                            'order' => $echelon->order,
+                                            'index_val' => $echelon->index_val,
+                                            'salary' => $echelon->salary
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                        $message = "Année {$year} créée avec copie depuis {$copyFromYear}";
+                    } else {
+                        $message = "Année {$year} créée sans copie (source non trouvée)";
+                    }
+                } else {
+                    $message = "Année {$year} créée avec succès";
+                }
+
+                Cache::forget('salary_years');
+                
+                $this->logActivity(
+                    'Gestion des années',
+                    'CREATE',
+                    "Ajout de l'année {$year}" . ($copyFromYear ? " (copiée depuis {$copyFromYear})" : "")
+                );
+                
+                return response()->json([
+                    'message' => $message,
+                    'year' => $salaryYear
+                ], 201);
+            });
+        } catch (\Exception $e) {
+            $this->logActivity(
+                'Gestion des années',
+                'ERROR',
+                "Erreur lors de l'ajout de l'année {$request->year}: " . $e->getMessage()
+            );
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function checkYearExists($year)
+    {
+        try {
+            $exists = SalaryYear::where('year', $year)->exists();
+            return response()->json(['exists' => $exists]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAllYears()
+    {
+        try {
+            $years = SalaryYear::orderBy('year', 'desc')->get();
+            return response()->json($years);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function copyYear($fromYear, $toYear)
+    {
+        try {
+            return DB::transaction(function () use ($fromYear, $toYear) {
+                if (SalaryYear::where('year', $toYear)->exists()) {
+                    return response()->json(['error' => "L'année {$toYear} existe déjà"], 422);
+                }
+
+                $sourceYear = SalaryYear::where('year', $fromYear)
+                    ->with(['roles.grades.echelles.echelons'])
+                    ->first();
+                
+                if (!$sourceYear) {
+                    return response()->json(['error' => 'Année source non trouvée'], 404);
+                }
+                
+                $targetYear = SalaryYear::create([
+                    'year' => $toYear,
+                    'is_active' => true
+                ]);
+                
+                foreach ($sourceYear->roles as $role) {
+                    $newRole = $targetYear->roles()->create([
+                        'name' => $role->name,
+                        'is_starred' => $role->is_starred
+                    ]);
+                    
+                    foreach ($role->grades as $grade) {
+                        $newGrade = $newRole->grades()->create([
+                            'name' => $grade->name
+                        ]);
+                        
+                        foreach ($grade->echelles as $echelle) {
+                            $newEchelle = $newGrade->echelles()->create([
+                                'level' => $echelle->level
+                            ]);
+                            
+                            foreach ($echelle->echelons as $echelon) {
+                                $newEchelle->echelons()->create([
+                                    'order' => $echelon->order,
+                                    'index_val' => $echelon->index_val,
+                                    'salary' => $echelon->salary
+                                ]);
+                            }
+                        }
+                    }
+                }
+                
+                Cache::forget('salary_years');
+                
+                $this->logActivity(
+                    'Copie configuration',
+                    'CREATE',
+                    "Copie de la configuration de {$fromYear} vers {$toYear}"
+                );
+                
+                return response()->json(['message' => "Configuration copiée de {$fromYear} vers {$toYear}"]);
+            });
+        } catch (\Exception $e) {
+            $this->logActivity(
+                'Copie configuration',
+                'ERROR',
+                "Erreur lors de la copie: " . $e->getMessage()
+            );
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Statistiques rapides pour une année
+    public function getStats($year)
+    {
+        try {
+            $salaryYear = SalaryYear::where('year', $year)->first();
+            
+            if (!$salaryYear) {
+                return response()->json([
+                    'total_roles' => 0,
+                    'total_grades' => 0,
+                    'total_echelles' => 0,
+                    'total_echelons' => 0,
+                    'total_salary_mass' => 0
+                ]);
+            }
+            
+            $roleIds = $salaryYear->roles()->pluck('id');
+            $gradeIds = Grade::whereIn('role_id', $roleIds)->pluck('id');
+            $echelleIds = Echelle::whereIn('grade_id', $gradeIds)->pluck('id');
+            
+            $totalRoles = $roleIds->count();
+            $totalGrades = $gradeIds->count();
+            $totalEchelles = $echelleIds->count();
+            $totalEchelons = Echelon::whereIn('echelle_id', $echelleIds)->count();
+            $totalSalaryMass = Echelon::whereIn('echelle_id', $echelleIds)->sum('salary');
+            
+            return response()->json([
+                'total_roles' => $totalRoles,
+                'total_grades' => $totalGrades,
+                'total_echelles' => $totalEchelles,
+                'total_echelons' => $totalEchelons,
+                'total_salary_mass' => $totalSalaryMass
+            ]);
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -240,7 +451,6 @@ class GestionEtatController extends Controller
             $echelonOrder = $item->order;
             $item->delete();
             
-            // Log l'activité
             $this->logActivity(
                 'Suppression échelon',
                 'DELETE',
@@ -481,7 +691,9 @@ class GestionEtatController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-    public function getYearsWithIndemnites(){
+
+    public function getYearsWithIndemnites()
+    {
         try {
             $yearsWithIndemnites = DB::table('gestion_indemnites')
                 ->select('salary_year_id')
@@ -521,8 +733,11 @@ class GestionEtatController extends Controller
                     ['year' => $request->to_year],
                     ['is_active' => true]
                 );
+            
+                if ($targetYear->wasRecentlyCreated === false) {
+                    $targetYear->roles()->delete();
+                }
                 
-                $targetYear->roles()->delete();
                 $rolesCount = 0;
                 
                 foreach ($sourceYear->roles as $role) {

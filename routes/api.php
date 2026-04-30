@@ -105,12 +105,20 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::delete('/echelle/{id}', [GestionEtatController::class, 'destroyEchelle']);
                 Route::delete('/echelon/{id}', [GestionEtatController::class, 'destroyEchelon']);
                 Route::get('/export-pdf/{year}', [GestionEtatController::class, 'exportPDF']);
+                Route::post('/add-year', [GestionEtatController::class, 'addYear']);
+                Route::get('/check-year/{year}', [GestionEtatController::class, 'checkYearExists']);
+                Route::get('/all-years', [GestionEtatController::class, 'getAllYears']);
+                Route::get('/stats/{year}', [GestionEtatController::class, 'getStats']);
+                Route::post('/copy-year/{fromYear}/{toYear}', [GestionEtatController::class, 'copyYear']);
 
 
+                // Indemnités
                 Route::get('/gestionindemnites/{yearId}', [GestionIndemniteController::class, 'index']);
+                Route::get('/gestionindemnites/detail/{id}', [GestionIndemniteController::class, 'show']);  
                 Route::post('/gestionindemnites', [GestionIndemniteController::class, 'store']);
+                Route::put('/gestionindemnites/{id}', [GestionIndemniteController::class, 'update']);
                 Route::delete('/gestionindemnites/{id}', [GestionIndemniteController::class, 'destroy']);
-                Route::get('/years-with-indemnites', [GestionEtatController::class, 'getYearsWithIndemnites']);
+                Route::get('/years-with-indemnites', [GestionIndemniteController::class, 'getYearsWithIndemnites']);
             });
 
             Route::get('/salary-years', function() {
@@ -144,8 +152,11 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/settings-for-edit/{annee}', [IrController::class, 'getSettingsForEdit']);
                 Route::post('/settings/{annee}', [IrController::class, 'updateSettings']);
                 Route::delete('/settings/{annee}', [IrController::class, 'destroy']);
+                
+                Route::get('/check-year/{annee}', [IrController::class, 'checkYear']);
+                Route::post('/copy-year', [IrController::class, 'copyYear']);
+                Route::get('/cached-settings/{annee}', [IrController::class, 'getCachedSettings']);
             });
-
 
             // Assurance Sociale - Paramétrage
             Route::prefix('assurances')->group(function () {

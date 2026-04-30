@@ -300,7 +300,7 @@ const GestionEtat = () => {
         });
         setIsDataSaved(false);
         setHasUnsavedChanges(true);
-        showNotification("📐 Nouvelle échelle créée (non sauvegardée)", "success");
+        showNotification(" Nouvelle échelle créée (non sauvegardée)", "success");
     };
 
     const addEchelon = (rId, gId, eId) => {
@@ -311,11 +311,14 @@ const GestionEtat = () => {
                     ...g, echelles: g.echelles.map(e => {
                         if (e.id === eId) {
                             const nextOrder = e.echelons.length + 1;
-                            const lastIndex = e.echelons[e.echelons.length - 1]?.index_val || 150;
+                            const lastIndex = e.echelons.length > 0 
+                            ? e.echelons[e.echelons.length - 1]?.index_val 
+                            : 0;
+                            const newIndex = lastIndex + 3;
                             const newEchelon = {
                                 id: Date.now(), 
                                 order: nextOrder, 
-                                index_val: lastIndex + 15, 
+                                index_val: newIndex , 
                                 salary: 0,
                                 _isNew: true
                             };
@@ -756,6 +759,42 @@ const GestionEtat = () => {
                                 <button onClick={() => changeYear(-1)} className={`p-0.5 hover:text-indigo-500 transition-colors`}><ChevronDown size={10}/></button>
                             </div>
                         </div>
+
+                        
+                        {/* <button 
+                           onClick={async () => {
+                                const newYear = prompt(" Entrez l'année à ajouter :", parseInt(config.year) + 1);
+                                if (!newYear) return;
+                                const yearNum = parseInt(newYear);
+                                if (yearNum < 1900 || yearNum > 2200) {
+                                    showNotification("Année invalide. Doit être entre 1900 et 2200", "error");
+                                    return;
+                                }
+                                try {
+                                    const checkRes = await api.get(`/api/gestionEtat/check-year/${yearNum}`);
+                                    if (checkRes.data.exists) {
+                                        showNotification(`L'année ${yearNum} existe déjà`, "error");
+                                        return;
+                                    }
+                                    await api.post('/api/gestionEtat/add-year', {
+                                        year: yearNum,
+                                        copy_from_year: null
+                                    });
+                                    showNotification(`✅ Année ${yearNum} ajoutée avec succès`, "success");
+                                    fetchYearData(); 
+                                    
+                                } catch (err) {
+                                    const errorMsg = err.response?.data?.error || "Erreur lors de l'ajout";
+                                    showNotification(` ${errorMsg}`, "error");
+                                    console.error(err);
+                                }
+                            }}
+                            className="flex items-center cursor-pointer gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-1.5 rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all text-[11px] shadow-lg shadow-emerald-500/25"
+                        >
+                            <Plus size={14} /> NOUVELLE ANNÉE
+                        </button> */}
+
+
                         <button onClick={addRole} className="flex items-center cursor-pointer gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-1.5 rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 text-[11px] shadow-lg shadow-indigo-500/25">
                             <Plus size={14} /> NOUVEAU POSTE
                         </button>
@@ -1016,27 +1055,6 @@ const GestionEtat = () => {
                 message={confirmConfig.message}
                 darkMode={darkMode}
             />
-            
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 0.3s ease-out;
-                }
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 3px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: ${darkMode ? '#252525' : '#f1f1f1'};
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: ${darkMode ? '#6366f1' : '#818cf8'};
-                    border-radius: 10px;
-                }
-            `}</style>
         </div>
     );
 };

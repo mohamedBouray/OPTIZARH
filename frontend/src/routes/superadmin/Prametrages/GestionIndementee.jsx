@@ -305,7 +305,6 @@ const GestionIndemnitee = () => {
                                         }}
                                         className={`px-4 py-2.5 cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-sm transition-colors ${!selectedYear ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium' : ''}`}
                                     >
-                                        -- Année --
                                     </div>
                                     {years.map(y => (
                                         <div 
@@ -314,8 +313,7 @@ const GestionIndemnitee = () => {
                                                 handleYearChange(y.year, y.id);
                                                 setIsYearOpen(false);
                                             }}
-                                            className={`px-4 py-2.5 cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-sm transition-colors ${selectedYear == y.year ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium' : ''}`}
-                                        >
+                                            className={`px-4 py-2.5 cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/30  dark:text-white text-sm transition-colors ${selectedYear == y.year ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium' : ''}`}>
                                             {y.year}
                                         </div>
                                     ))}
@@ -492,14 +490,14 @@ const GestionIndemnitee = () => {
                                 <button 
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className=" cursor-pointer flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     {loading ? <Loader2 size={18} className="animate-spin"/> : <Plus size={18} />}
                                     {loading ? "Enregistrement..." : "Enregistrer l'indemnité"}
                                 </button>
                                 <button 
                                     onClick={resetForm}
-                                    className="px-6 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                                    className=" cursor-pointer px-6 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
                                 >
                                     <X size={18} /> Réinitialiser
                                 </button>
@@ -525,17 +523,6 @@ const GestionIndemnitee = () => {
                     </div>
                 )}
             </div>
-
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-8px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
-                .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: ${darkMode ? '#2A2A2A' : '#E5E7EB'}; border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 10px; }
-            `}</style>
         </div>
     );
 };

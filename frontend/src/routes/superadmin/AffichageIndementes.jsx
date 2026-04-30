@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../lib/apis/axiosConfig';
 import { useNotification } from '../../context/NotificationContext';
 import { useTheme } from '../../context/ThemeContext';
+import DeleteConfirmModal from '../../lib/components/DeleteConfirmModal';
 import { 
     Gift, Calendar, Loader2, AlertCircle, ArrowLeft, 
     Users, Award, Grid3x3, Hash, Percent, Globe, Wallet, TrendingUp, Eye, 
-    CheckCircle, Search, List, ChevronDown
+    CheckCircle, Search, List, ChevronDown, Trash2
 } from 'lucide-react';
 
 const AffichageIndemnitee = () => {
@@ -21,8 +22,9 @@ const AffichageIndemnitee = () => {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('all');
-    const [filterStatut, setFilterStatut] = useState('all');
     const [isYearOpen, setIsYearOpen] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, libelle: '' });
     const yearRef = useRef(null);
 
     const bgClass = darkMode ? 'bg-[#0D0D0D]' : 'bg-[#F8FAFC]';
@@ -53,7 +55,6 @@ const AffichageIndemnitee = () => {
         }
     }, [selectedYearId]);
 
-    // Modification ici: Récupérer uniquement les années avec indemnités
     const fetchYears = async () => {
         setLoading(true);
         try {
@@ -99,6 +100,32 @@ const AffichageIndemnitee = () => {
         showNotification(`📅 Année ${yearValue} sélectionnée`, "success");
     };
 
+    // ============ FONCTION DE SUPPRESSION AVEC MODAL ============
+    const openDeleteModal = (id, libelle) => {
+        setDeleteModal({ isOpen: true, id, libelle });
+    };
+
+    const closeDeleteModal = () => {
+        setDeleteModal({ isOpen: false, id: null, libelle: '' });
+    };
+
+    const confirmDelete = async () => {
+        const { id, libelle } = deleteModal;
+        setDeletingId(id);
+        try {
+            await api.delete(`/api/gestionEtat/gestionindemnites/${id}`);
+            showNotification(`✅ Indemnité "${libelle}" supprimée avec succès`, "success");
+            fetchIndemnites();
+        } catch (err) {
+            console.error(err);
+            showNotification("❌ Erreur lors de la suppression", "error");
+        } finally {
+            setDeletingId(null);
+            closeDeleteModal();
+        }
+    };
+    // ============ FIN FONCTION DE SUPPRESSION ============
+
     const getTargetText = (item) => {
         if (item.is_for_all) return "🌍 Tous les employés";
         let target = "";
@@ -127,8 +154,7 @@ const AffichageIndemnitee = () => {
     const filteredIndemnites = indemnites.filter(item => {
         const matchesSearch = item.libelle?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesType = filterType === 'all' || item.type === filterType;
-        const matchesStatut = filterStatut === 'all' || (filterStatut === 'active' ? item.statut : !item.statut);
-        return matchesSearch && matchesType && matchesStatut;
+        return matchesSearch && matchesType;
     });
 
     const totalFixe = filteredIndemnites.filter(i => i.type === 'Fixe' && i.statut).reduce((sum, i) => sum + (parseFloat(i.valeur) || 0), 0);
@@ -155,7 +181,7 @@ const AffichageIndemnitee = () => {
                                 </h2>
                                 <p className={`text-sm ${textMutedClass} mt-1`}>Liste des primes et indemnités configurées</p>
                                 {years.length === 0 && !loading && (
-                                    <p className={`text-xs text-yellow-500 mt-1`}> Aucune indemnité configurée</p>
+                                    <p className={`text-xs text-yellow-500 mt-1`}>⚠️ Aucune indemnité configurée</p>
                                 )}
                             </div>
                         </div>
@@ -243,15 +269,10 @@ const AffichageIndemnitee = () => {
                                     <option value="Fixe">Fixe</option>
                                     <option value="Pourcentage">Pourcentage</option>
                                 </select>
-                                <select value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)} className={`px-3 py-2 rounded-xl text-sm border ${borderClass} ${selectClass} ${textClass}`}>
-                                    <option value="all">Tous statuts</option>
-                                    <option value="active">Actifs</option>
-                                    <option value="inactive">Inactifs</option>
-                                </select>
                             </div>
                         </div>
 
-                        {/* Liste */}
+                        {/* Liste avec bouton suppression et modal */}
                         <div className={`${cardClass} rounded-2xl shadow-xl border ${borderClass} overflow-hidden`}>
                             <div className={`px-6 py-4 border-b ${borderClass} ${darkMode ? 'bg-[#1A1A1A]' : 'bg-gray-50'}`}>
                                 <h3 className={`font-bold flex items-center gap-2 ${textClass}`}>
@@ -275,7 +296,6 @@ const AffichageIndemnitee = () => {
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <div className={`p-2 rounded-xl ${darkMode ? 'bg-indigo-900/30' : 'bg-indigo-100'}`}><Gift size={14} className="text-indigo-500" /></div>
                                                             <span className={`font-semibold ${textClass}`}>{item.libelle}</span>
-                                                            <span className={`text-[9px] px-2 py-0.5 rounded-full ${item.statut ? 'bg-emerald-500/20 text-emerald-600' : 'bg-red-500/20 text-red-600'}`}>{item.statut ? 'ACTIF' : 'INACTIF'}</span>
                                                         </div>
                                                         <div className="flex flex-wrap items-center gap-2 mt-2">
                                                             {getTypeBadge(item.type)}
@@ -289,6 +309,19 @@ const AffichageIndemnitee = () => {
                                                         <span className={`font-bold text-indigo-600 dark:text-indigo-400 text-sm ${darkMode ? 'bg-indigo-900/30' : 'bg-indigo-50'} px-3 py-1.5 rounded-lg`}>
                                                             {item.valeur} {item.type === 'Fixe' ? 'MAD' : '%'}
                                                         </span>
+                                                        {/* 🔴 BOUTON SUPPRESSION AVEC MODAL */}
+                                                        <button 
+                                                            onClick={() => openDeleteModal(item.id, item.libelle)}
+                                                            disabled={deletingId === item.id}
+                                                            className="p-2 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all cursor-pointer"
+                                                            title="Supprimer"
+                                                        >
+                                                            {deletingId === item.id ? (
+                                                                <Loader2 size={16} className="animate-spin" />
+                                                            ) : (
+                                                                <Trash2 size={16} />
+                                                            )}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -326,16 +359,15 @@ const AffichageIndemnitee = () => {
                 )}
             </div>
 
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-8px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
-                .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: ${darkMode ? '#2A2A2A' : '#E5E7EB'}; border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 10px; }
-            `}</style>
+            {/* DeleteConfirmModal */}
+            <DeleteConfirmModal
+                isOpen={deleteModal.isOpen}
+                onClose={closeDeleteModal}
+                onConfirm={confirmDelete}
+                title="Supprimer l'indemnité"
+                message={`Êtes-vous sûr de vouloir supprimer l'indemnité "${deleteModal.libelle}" ? Cette action est irréversible.`}
+                darkMode={darkMode}
+            />
         </div>
     );
 };

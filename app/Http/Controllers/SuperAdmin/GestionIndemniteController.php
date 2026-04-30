@@ -13,6 +13,7 @@ use App\Models\SuperAdmin\Echelon;
 
 class GestionIndemniteController extends Controller
 {
+    // Récupérer toutes les indemnités d'une année
     public function index($yearId)
     {
         try {
@@ -32,6 +33,18 @@ class GestionIndemniteController extends Controller
         }
     }
 
+    // Récupérer une indemnité spécifique
+    public function show($id)
+    {
+        try {
+            $indemnite = GestionIndemnite::with(['role', 'grade', 'echelle', 'echelon'])->findOrFail($id);
+            return response()->json($indemnite);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Ajouter une indemnité
     public function store(Request $request)
     {
         try {
@@ -49,7 +62,6 @@ class GestionIndemniteController extends Controller
 
             $indemnite = GestionIndemnite::create($validated);
             
-            // Préparer le message pour le log
             $target = $validated['is_for_all'] ? 'Tous les employés' : 'Cible spécifique';
             if (!$validated['is_for_all'] && isset($validated['role_id'])) {
                 $role = Role::find($validated['role_id']);
@@ -88,6 +100,47 @@ class GestionIndemniteController extends Controller
         }
     }
 
+    // Mettre à jour une indemnité (optionnel - sans status)
+    public function update(Request $request, $id)
+    {
+        try {
+            $indemnite = GestionIndemnite::findOrFail($id);
+            
+            $validated = $request->validate([
+                'libelle' => 'sometimes|string|max:255',
+                'type' => 'sometimes|in:Fixe,Pourcentage',
+                'valeur' => 'sometimes|numeric|min:0',
+                'role_id' => 'nullable|exists:roles,id',
+                'grade_id' => 'nullable|exists:grades,id',
+                'echelle_id' => 'nullable|exists:echelles,id',
+                'echelon_id' => 'nullable|exists:echelons,id',
+                'is_for_all' => 'sometimes|boolean'
+            ]);
+
+            $indemnite->update($validated);
+            
+            $this->logActivity(
+                'Indemnité',
+                'UPDATE',
+                "Modification de l'indemnité '{$indemnite->libelle}' (ID: {$id})"
+            );
+            
+            return response()->json([
+                'message' => 'Indemnité modifiée avec succès',
+                'data' => $indemnite->load(['role', 'grade', 'echelle', 'echelon'])
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logActivity(
+                'Indemnité',
+                'ERROR',
+                "Erreur lors de la modification: " . $e->getMessage()
+            );
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Supprimer une indemnité
     public function destroy($id)
     {
         try {
@@ -113,6 +166,7 @@ class GestionIndemniteController extends Controller
         }
     }
 
+    // Récupérer les années qui ont des indemnités
     public function getYearsWithIndemnites()
     {
         try {
