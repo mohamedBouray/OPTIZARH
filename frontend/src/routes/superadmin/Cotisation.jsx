@@ -1,292 +1,238 @@
 import React, { useState, useEffect } from 'react';
-import api from "../../lib/apis/axiosConfig";
-import { Trash2, Edit3, Plus, ChevronDown, X, Inbox } from 'lucide-react';
+import { 
+  Download, Loader2, Building2, ListTree, 
+  TrendingUp, Calendar, ShieldCheck, FileText,
+  Search, Activity
+} from 'lucide-react';
+import api from '../../lib/apis/axiosConfig';
+import { jsPDF } from "jspdf";
+import autoTable from 'jspdf-autotable';
 
-export default function Cotisation() {
-  const [selectedYear, setSelectedYear] = useState('2026');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [organismes, setOrganismes] = useState([]);
+const ConsultationCotisation = () => {
+  const [selectedYear, setSelectedYear] = useState(2026);
   const [availableYears, setAvailableYears] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); // <--- Search state
+  const [fetching, setFetching] = useState(false);
 
-  const [formData, setFormData] = useState({
-    nom: '',
-    type: 'Sécurité Sociale',
-    taux: '',
-    plafond: '',
-    year: '2026',
-    mgpap: false,
-    omfam: false,
-    rattachement: ''
-  });
-
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const allRes = await api.get(`/api/cotisations`);
-      const allData = allRes.data;
-
-      const yearsInDb = [...new Set(allData.flatMap(org => org.rules.map(r => r.year.toString())))].sort((a, b) => b - a);
-
-      if (yearsInDb.length > 0) {
-        setAvailableYears(yearsInDb);
-        const currentYearHasData = allData.some(org => org.rules.some(r => r.year.toString() === selectedYear));
-        
-        if (!currentYearHasData) {
-          setSelectedYear(yearsInDb[0]);
-          return; 
-        }
-
-        const filtered = allData.filter(org => org.rules.some(r => r.year.toString() === selectedYear));
-        setOrganismes(filtered);
-      } else {
-        setAvailableYears([]);
-        setOrganismes([]);
-      }
-    } catch (err) {
-      console.error("Erreur Fetch:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // --- Fetching Data ---
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await api.get('/api/salary-years');
+        setAvailableYears(response.data);
+      } catch (err) { console.error(err); }
+    };
+    fetchYears();
+  }, []);
 
   useEffect(() => {
+    const fetchData = async () => {
+      setFetching(true);
+      try {
+        const res = await api.get(`/api/get-cotisations?year=${selectedYear}`);
+        setData(res.data || []);
+      } catch (err) { console.error(err); }
+      finally { setFetching(false); }
+    };
     fetchData();
   }, [selectedYear]);
 
-  useEffect(() => {
-    let parts = [];
-    if (formData.mgpap) parts.push('MGPAP');
-    if (formData.omfam) parts.push('OMFAM');
-    setFormData(prev => ({ ...prev, rattachement: parts.join(' + ') }));
-  }, [formData.mgpap, formData.omfam]);
+  // --- Search Logic ---
+  const filteredData = data.filter(org => 
+    org.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (selectedId) {
-        await api.put(`/api/cotisations/${selectedId}`, formData);
-      } else {
-        await api.post('/api/cotisations', formData);
-      }
-      closeModal();
-      fetchData();
-    } catch (err) {
-      alert("Erreur lors de l'enregistrement");
-    }
+  // --- Stats Logic (based on filtered data or total data) ---
+  const stats = {
+    totalOrganismes: data.length,
+    totalRubriques: data.reduce((acc, org) => acc + (org.rubriques?.length || 0), 0),
+    maxTaux: data.length > 0 ? Math.max(...data.flatMap(org => org.rubriques?.map(r => parseFloat(r.taux) || 0) || [0])) : 0,
   };
 
-  const handleEditClick = (item) => {
-    const rule = item.rules.find(r => r.year.toString() === selectedYear) || item.rules[0] || {};
-    setSelectedId(item.id);
-    setFormData({
-      nom: item.nom,
-      type: item.type,
-      taux: rule.taux || '',
-      plafond: rule.plafond || '',
-      year: rule.year || selectedYear,
-      mgpap: !!rule.mgpap,
-      omfam: !!rule.omfam,
-      rattachement: item.rattachement || ''
+  // --- Export PDF ---
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.setTextColor(0, 51, 102);
+    doc.text(`Rapport des Cotisations - Année ${selectedYear}`, 14, 20);
+    
+    let currentY = 30;
+    filteredData.forEach((org) => {
+      if (currentY > 250) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(12);
+      doc.setTextColor(40);
+      doc.text(org.name, 14, currentY);
+      
+      const rows = org.rubriques.map(r => [
+        r.label, 
+        r.plafond ? `${parseFloat(r.plafond).toLocaleString()} DH` : 'N/A', 
+        `${r.taux}%`
+      ]);
+
+      autoTable(doc, {
+        startY: currentY + 2,
+        head: [['Désignation', 'Plafond', 'Taux']],
+        body: rows,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 51, 102] },
+        margin: { left: 14 }
+      });
+      currentY = doc.lastAutoTable.finalY + 10;
     });
-    setIsModalOpen(true);
+    doc.save(`Synthese_Cotisations_${selectedYear}.pdf`);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Êtes-vous sûr ?")) {
-      try {
-        await api.delete(`/api/cotisations/${id}`);
-        fetchData();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedId(null);
-    setFormData({
-      nom: '', type: 'Sécurité Sociale', taux: '', plafond: '',
-      year: selectedYear || '2026', mgpap: false, omfam: false, rattachement: ''
-    });
-  };
-
-return (
-    <div className="bg-[#F8FAFC] dark:bg-[#0a0a0a] min-h-screen font-sans text-slate-900 dark:text-white transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+  return (
+    <div className="min-h-screen bg-[#f1f5f9] p-4 md:p-8 font-sans">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Cotisations Sociales</h1>
-            <p className="text-slate-500 dark:text-gray-500 font-medium text-sm italic uppercase tracking-tighter">Gestion des référentiels par année.</p>
+            <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+              <ShieldCheck className="text-blue-600" size={32} />
+              Consultation des Paramètres
+            </h1>
+            <p className="text-slate-500 text-sm italic">Système de gestion des cotisations sociales</p>
           </div>
-          
-          {availableYears.length > 0 && (
-            <div className="relative">
+
+          <button 
+            onClick={exportPDF}
+            className="flex items-center gap-2 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all uppercase shadow-md shadow-rose-200"
+          >
+            <Download size={16} /> Exporter PDF
+          </button>
+        </div>
+
+        {/* TOP STATS BOXES */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-5">
+            <div className="h-12 w-12 bg-indigo-50 rounded-xl flex items-center justify-center shrink-0">
+              <Building2 size={24} className="text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Organismes</p>
+              <h3 className="text-2xl font-bold text-slate-800">{stats.totalOrganismes}</h3>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-5">
+            <div className="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
+              <ListTree size={24} className="text-[#003366]" />
+            </div>
+            <div>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Total Rubriques</p>
+              <h3 className="text-2xl font-bold text-slate-800">{stats.totalRubriques}</h3>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-5">
+            <div className="h-12 w-12 bg-rose-50 rounded-xl flex items-center justify-center shrink-0">
+              <TrendingUp size={24} className="text-rose-600" />
+            </div>
+            <div>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Taux Maximal</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-bold text-slate-800">{stats.maxTaux}</span>
+                <span className="text-sm font-semibold text-slate-400">%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SEARCH & FILTER BAR - THE ONE YOU PROVIDED */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 mb-6 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-4 py-2">
+              <span className="text-[11px] font-bold text-slate-400 uppercase mr-4 tracking-tight">Année</span>
               <select 
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="appearance-none bg-white dark:bg-[#1c1c1c] border border-slate-200 dark:border-[#262626] rounded-full px-6 py-2.5 pr-12 text-sm font-bold text-slate-700 dark:text-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer transition-all"
+                className="bg-transparent text-lg font-bold text-[#003366] outline-none cursor-pointer"
               >
-                {availableYears.map(yr => (
-                  <option key={yr} value={yr}>{yr}</option>
+                {availableYears.map(y => (
+                  <option key={y.id} value={y.year || y.annee}>{y.year || y.annee}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-4 top-3 text-slate-400 dark:text-gray-600 pointer-events-none" size={16} />
             </div>
-          )}
-        </div>
-
-        <div className="bg-white dark:bg-[#121212] p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-[#262626] min-h-[500px] flex flex-col transition-all">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
-            <h2 className="text-xl font-extrabold text-slate-800 dark:text-white tracking-tight">
-              {availableYears.length > 0 ? `Référentiel Organismes (${selectedYear})` : 'Référentiel'}
-            </h2>
-            <button 
-              onClick={() => setIsModalOpen(true)} 
-              className="bg-indigo-600 text-white px-6 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-indigo-700 font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-indigo-100 dark:shadow-none active:scale-95"
-            >
-              <Plus size={20}/> Nouvel Organisme
-            </button>
+            
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text"
+                placeholder="Rechercher un organisme..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 font-medium"
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
+          {fetching && <Loader2 className="animate-spin text-blue-600" size={20} />}
+        </div>
 
-          {organismes.length > 0 ? (
-            <div className="overflow-x-auto flex-1">
-              <table className="w-full text-left border-separate border-spacing-y-3">
-                <thead>
-                  <tr className="text-slate-400 dark:text-gray-500 text-[10px] uppercase tracking-[0.2em] font-black">
-                    <th className="px-6 pb-4">Organisme</th>
-                    <th className="px-6 pb-4">Type</th>
-                    <th className="px-6 pb-4">Taux</th>
-                    <th className="px-6 pb-4">Plafond</th>
-                    <th className="px-6 pb-4">Mise à jour</th>
-                    <th className="px-4 pb-4 text-center">MGPAP</th>
-                    <th className="px-4 pb-4 text-center">OMFAM</th>
-                    <th className="px-6 pb-4 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="before:block before:h-2">
-                  {organismes.map((item) => {
-                    const rule = item.rules.find(r => r.year.toString() === selectedYear);
-                    if (!rule) return null;
-                    
-                    const formattedDate = item.updated_at ? new Date(item.updated_at).toLocaleDateString('fr-FR', {
-                        day: 'numeric', month: 'short', year: 'numeric'
-                    }) : '---';
+        
 
-                    return (
-                      <tr key={item.id} className="group bg-slate-50/50 dark:bg-[#1c1c1c]/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5 transition-all">
-                        <td className="px-6 py-5 font-black text-slate-900 dark:text-white rounded-l-2xl">{item.nom}</td>
-                        <td className="px-6 py-5 text-slate-500 dark:text-gray-400 font-bold text-xs uppercase">{item.type}</td>
-                        <td className="px-6 py-5 font-black text-indigo-600 dark:text-indigo-400 text-lg">{rule.taux}%</td>
-                        <td className="px-6 py-5 font-black text-slate-700 dark:text-gray-300">{rule.plafond} <span className="text-[10px] text-slate-400">DH</span></td>
-                        <td className="px-6 py-5 text-slate-400 dark:text-gray-500 font-medium text-xs">{formattedDate}</td>
-                        
-                        {/* MGPAP Toggle View */}
-                        <td className="px-4 py-5 text-center">
-                          <div className={`mx-auto w-9 h-5 rounded-full relative transition-colors ${rule.mgpap ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-[#333]'}`}>
-                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${rule.mgpap ? 'left-4.5' : 'left-0.5'}`} />
-                          </div>
-                        </td>
-
-                        {/* OMFAM Toggle View */}
-                        <td className="px-4 py-5 text-center">
-                          <div className={`mx-auto w-9 h-5 rounded-full relative transition-colors ${rule.omfam ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-[#333]'}`}>
-                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${rule.omfam ? 'left-4.5' : 'left-0.5'}`} />
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-5 rounded-r-2xl">
-                          <div className="flex justify-center gap-2">
-                            <button onClick={() => handleEditClick(item)} className="p-2 hover:bg-indigo-600 hover:text-white rounded-xl text-slate-400 transition-all"><Edit3 size={18}/></button>
-                            <button onClick={() => handleDelete(item.id)} className="p-2 hover:bg-red-500 hover:text-white rounded-xl text-slate-400 transition-all"><Trash2 size={18}/></button>
-                          </div>
-                        </td>
+        {/* DATA DISPLAY */}
+        {fetching ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
+            <Loader2 className="animate-spin text-blue-600 mb-4" size={40} />
+            <p className="text-slate-500 font-medium italic">Traitement des paramètres en cours...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredData.map((org) => (
+              <div key={org.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:border-blue-300 transition-all group">
+                <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between group-hover:bg-blue-50/30">
+                  <h4 className="font-bold text-slate-700 flex items-center gap-2 uppercase text-sm tracking-tight">
+                    <FileText size={16} className="text-blue-500" />
+                    {org.name}
+                  </h4>
+                  <span className="text-[10px] bg-white px-2 py-1 rounded-md border border-slate-200 text-slate-400 font-bold">
+                    {org.rubriques?.length || 0} Rubriques
+                  </span>
+                </div>
+                <div className="p-0 text-xs">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="bg-white text-slate-400 border-b border-slate-50">
+                        <th className="px-6 py-3 font-black uppercase tracking-tighter">Désignation</th>
+                        <th className="px-6 py-3 font-black uppercase tracking-tighter text-right">Plafond</th>
+                        <th className="px-6 py-3 font-black uppercase tracking-tighter text-center">Taux</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : !isLoading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-              <Inbox size={60} strokeWidth={1} className="text-slate-200 dark:text-[#262626]" />
-              <p className="text-slate-400 dark:text-gray-600 font-bold uppercase text-xs tracking-widest">Aucune donnée pour {selectedYear}</p>
-            </div>
-          )}
-        </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {org.rubriques?.map((rub) => (
+                        <tr key={rub.id} className="hover:bg-blue-50/20 transition-colors">
+                          <td className="px-6 py-3 font-medium text-slate-600">{rub.label}</td>
+                          <td className="px-6 py-3 text-right font-bold text-slate-500">
+                            {rub.plafond ? `${parseFloat(rub.plafond).toLocaleString('fr-FR')} DH` : '-'}
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg font-black">
+                              {rub.taux}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {filteredData.length === 0 && !fetching && (
+          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+             <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search size={24} className="text-slate-300" />
+             </div>
+            <p className="text-slate-400 font-bold">Aucun résultat trouvé pour "{searchTerm}"</p>
+          </div>
+        )}
       </div>
-
-      {/* Modal Section */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-in fade-in duration-300">
-            <form onSubmit={handleSubmit} className="bg-white dark:bg-[#121212] w-full max-w-xl rounded-[2.5rem] shadow-2xl flex flex-col border border-transparent dark:border-[#262626]">
-                <div className="p-10 pb-4 flex justify-between items-start">
-                  <div>
-                    <h2 className="text-3xl font-black text-slate-800 dark:text-white">{selectedId ? 'Modifier' : 'Ajouter'}</h2>
-                    <p className="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mt-1">Détails de l'organisme social</p>
-                  </div>
-                  <button type="button" onClick={closeModal} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1c1c1c] rounded-full transition-colors">
-                    <X size={28} className="text-slate-400"/>
-                  </button>
-                </div>
-
-                <div className="p-10 pt-4 space-y-5">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nom de l'organisme</label>
-                    <input required value={formData.nom} onChange={e => setFormData({...formData, nom: e.target.value})} placeholder="Ex: CNSS, CIMR..." className="w-full bg-slate-50 dark:bg-[#1c1c1c] dark:text-white dark:border-[#262626] border-2 border-transparent focus:border-indigo-500 rounded-2xl p-4 outline-none font-bold transition-all"/>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Type</label>
-                      <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1c1c1c] dark:text-white dark:border-[#262626] border-2 border-transparent focus:border-indigo-500 rounded-2xl p-4 outline-none font-bold appearance-none cursor-pointer">
-                          <option>Sécurité Sociale</option>
-                          <option>Assurance Maladie</option>
-                          <option>Retraite</option>
-                          <option>Impôt Revenu</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Année</label>
-                      <input required type="number" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} placeholder="2024" className="w-full bg-slate-50 dark:bg-[#1c1c1c] dark:text-white dark:border-[#262626] border-2 border-transparent focus:border-indigo-500 rounded-2xl p-4 outline-none font-bold transition-all"/>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Taux (%)</label>
-                      <input required step="0.01" type="number" value={formData.taux} onChange={e => setFormData({...formData, taux: e.target.value})} placeholder="0.00" className="w-full bg-slate-50 dark:bg-[#1c1c1c] dark:text-white dark:border-[#262626] border-2 border-transparent focus:border-indigo-500 rounded-2xl p-4 outline-none font-bold transition-all"/>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Plafond (DH)</label>
-                      <input type="number" value={formData.plafond} onChange={e => setFormData({...formData, plafond: e.target.value})} placeholder="Laisser vide si aucun" className="w-full bg-slate-50 dark:bg-[#1c1c1c] dark:text-white dark:border-[#262626] border-2 border-transparent focus:border-indigo-500 rounded-2xl p-4 outline-none font-bold transition-all"/>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-8 py-2">
-                     <label className="flex items-center gap-3 cursor-pointer group">
-                        <div onClick={() => setFormData({...formData, mgpap: !formData.mgpap})} className={`w-10 h-5 rounded-full relative transition-colors ${formData.mgpap ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-[#333]'}`}>
-                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${formData.mgpap ? 'left-5.5' : 'left-0.5'}`}/>
-                        </div>
-                        <span className="text-xs font-black text-slate-600 dark:text-gray-400 uppercase tracking-widest">MGPAP</span>
-                     </label>
-                     <label className="flex items-center gap-3 cursor-pointer group">
-                        <div onClick={() => setFormData({...formData, omfam: !formData.omfam})} className={`w-10 h-5 rounded-full relative transition-colors ${formData.omfam ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-[#333]'}`}>
-                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${formData.omfam ? 'left-5.5' : 'left-0.5'}`}/>
-                        </div>
-                        <span className="text-xs font-black text-slate-600 dark:text-gray-400 uppercase tracking-widest">OMFAM</span>
-                     </label>
-                  </div>
-
-                  <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-5 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-[0.98] mt-4">
-                    Enregistrer les données
-                  </button>
-                </div>
-            </form>
-        </div>
-      )}
     </div>
   );
-}
+};
+
+export default ConsultationCotisation;

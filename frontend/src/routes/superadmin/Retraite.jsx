@@ -44,7 +44,7 @@ const GestionRetraite = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await api.get(`/api/retraite-settings/${selectedYear}`);
+        const response = await api.get(`/api/retraite/settings/${selectedYear}`);
         if (response.data) {
           setRetraiteData({
             // Using ?? to allow '0' as a valid value from database
@@ -68,10 +68,8 @@ const GestionRetraite = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await api.post('/api/retraite-settings', {
-        year: selectedYear,
-        ...retraiteData
-      });
+      await api.post('/api/retraite/settings', { year: selectedYear, ...retraiteData });
+
       showNotification("Paramètres enregistrés avec succès !", "success");
       setIsEditing(false);
       setLastModified(new Date().toISOString()); // Visual update

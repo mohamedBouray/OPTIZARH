@@ -11,3 +11,4 @@ class RcarDetail extends Model
     protected $fillable = ['rcar_type_id', 'designation', 'plafond', 'percentage'];
     //
 }
+

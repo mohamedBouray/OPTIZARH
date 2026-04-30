@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { superAdminApi } from './lib/apis/superadmin';
+import { attachLoadingHandler } from "./lib/apis/axiosConfig";
+
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from "./context/ThemeContext";
 import { LoadingProvider, useLoading } from "./context/LoadingContext";
-import { attachLoadingHandler } from "./lib/apis/axiosConfig";
 
 // Auth Components
 import Login from './routes/auth/login';
@@ -16,41 +17,45 @@ import ResetPassword from './routes/auth/ResetPassword';
 import VerifyEmail from './routes/auth/VerifyEmail';
 import VerifyNotice from './routes/auth/VerifyNotice';
 
-// SuperAdmin
+
+// SuperAdmin Components
 import SuperAdminLayout from "../src/layout/SuperAdminLayout";
 import SuperAdminDashboard from "./routes/superadmin/Dashboard";
 import Users from "./routes/superadmin/users";
 import Parametrages from './routes/superadmin/Prametrages/Parmetrages';
-import GestionEtat from "./routes/superadmin/GestionEtat";
-import GestionIndemenitee from "./routes/superadmin/GestionIndementee";
-import GestionCotisation from './routes/superadmin/Gestion_Cotisation';
-import GestionRCAR from './routes/superadmin/Gestion_RCAR';
-
-
-
-import RCAR from "./routes/superadmin/ParametrageRCAR";
-import Indemente from "./routes/superadmin/Indementes";
-import Cotisation from "./routes/superadmin/Cotisation";
+    import GestionEtat from "./routes/superadmin/Prametrages/GestionEtat";
+    import GestionIndemenitee from "./routes/superadmin/Prametrages/GestionIndementee";
+    import GestionCotisation from './routes/superadmin/Prametrages/Gestion_Cotisation';
+    import GestionRCAR from './routes/superadmin/Prametrages/Gestion_RCAR';
+    import IRGestion from "./routes/superadmin/Prametrages/GestionIR";
+    import GestionCredit from './routes/superadmin/Credit'; //
+    import SNTL from "./routes/superadmin/Prametrages/SNTL";
+import Indemente from "./routes/superadmin/AffichageIndementes";
+import Cotisation from "./routes/superadmin/Cotisation";//
+import RCAR from "./routes/superadmin/RCAR";//
+import IRAffichage from "./routes/superadmin/IRAffichage";
+import Credit from "./routes/superadmin/Credit";//
 import Retraite from "./routes/superadmin/Retraite";
-import Credit from "./routes/superadmin/Credit";
-import SNTL from "./routes/superadmin/SNTL";
-import Social from "./routes/superadmin/Social";
-import IR from "./routes/superadmin/GestionIR";
+import AssuranceManagement from './routes/superadmin/AssuranceManagement';
+import SNTLPage from "./routes/superadmin/SNTL";
+
+
 import Logs from "./routes/superadmin/Logs";
-import Parametres from './routes/superadmin/Settings'
+import Parametres from './routes/superadmin/Settings'//
 
 
 
-//Admin 
+
+
+
+
+
+//Admin Components
 import AdminDashboard from './routes/Admin/Dashboard';
-
-// RH
+// RH Components
 import RHDashboard from './routes/Rh/Dashboard';
-
-// Employee
+// Employee Components
 import EmployeeDashboard from './routes/employee/Dashboard';
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -72,7 +77,6 @@ const ProtectedRoute = ({ allowedRoles }) => {
     }
     return <Outlet />;
 };
-
 /*
 |--------------------------------------------------------------------------
 |                            Public Route 
@@ -116,6 +120,7 @@ const PublicRoute = ({ children, isFirstRun }) => {
     return children;
 };
 
+
 function AppContent() {
     const { setLoading } = useLoading();
     const [isFirstRun, setIsFirstRun] = useState(null);
@@ -123,7 +128,6 @@ function AppContent() {
     useEffect(() => {
         attachLoadingHandler(setLoading);
     }, [setLoading]);
-
 
     useEffect(() => {
         const checkStatus = async () => {
@@ -149,16 +153,12 @@ function AppContent() {
     return (
             <Router>
                 <Routes>
-                    {/* 1. Root logic */}
-                    <Route path="/" element={
-                        isFirstRun ? <Navigate to="/auth/setup" replace /> : <Navigate to="/auth/login" replace />
-                    } />
+                    <Route path="/" element={isFirstRun ? <Navigate to="/auth/setup" replace /> : <Navigate to="/auth/login" replace />} />
 
                     {/* 2.Auth Routes */}
                     <Route path="/auth">
                         <Route index element={<Navigate to="/auth/login" replace />} />
-                        <Route path="setup" element={
-                            isFirstRun ? <SuperAdminRegister /> : <Navigate to="/auth/login" replace />} />
+                        <Route path="setup" element={isFirstRun ? <SuperAdminRegister /> : <Navigate to="/auth/login" replace />} />
                         <Route path="login" element={<PublicRoute isFirstRun={isFirstRun}><Login /></PublicRoute>} />
                         <Route path="register" element={<PublicRoute isFirstRun={isFirstRun}><RoleSelection /></PublicRoute>} />
                         <Route path="register/:role" element={<PublicRoute isFirstRun={isFirstRun}><Register /></PublicRoute>} />
@@ -169,7 +169,6 @@ function AppContent() {
                         <Route path="*" element={<Navigate to="/auth/login" replace />} />
                     </Route>
 
-                    {/* 3. Protected Dashboards */}
                     {/* SuperAdmin */}
                     <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
                         <Route path="/SuperAdmin" element={<SuperAdminLayout />}>
@@ -182,22 +181,20 @@ function AppContent() {
                                 <Route path="GestionIndemenitee" element={<GestionIndemenitee/>} />
                                 <Route path="GestionCotisation" element={<GestionCotisation/>} />
                                 <Route path="GestionRCAR" element={<GestionRCAR/>} />
-
-
+                                <Route path="GesionIR" element={<IRGestion/>}/>
+                                <Route path="GestionCredit" element={<GestionCredit/>}/>
+                                <Route path="SNTL" element={<SNTL />} />
                             </Route>
-
-
-
-
-                            
-                            <Route path="RCAR" element={<RCAR/>} />
-                            <Route path="Indementes" element={<Indemente/>} />
+                            <Route path="affichageIndementes" element={<Indemente/>} />
                             <Route path="Cotisation" element={<Cotisation/>} />
-                            <Route path="Retraite" element={<Retraite/>} />
+                            <Route path="RCAR" element={<RCAR/>} />
+                            <Route path="IRAffichage" element={<IRAffichage/>}/>
                             <Route path="Credit" element={<Credit />} />
-                            <Route path="SNTL" element={<SNTL />} />
-                            <Route path="Social" element={<Social />} />
-                            <Route path="GesionIR" element={<IR/>}/>
+                            <Route path="Retraite" element={<Retraite/>} />
+                            <Route path="assurances" element={<AssuranceManagement />} />
+                            <Route path="SNTL" element={<SNTLPage />} />
+                            
+
                             <Route path="Logs" element={<Logs/>}/>
                             <Route path="Parametres" element={<Parametres/>}/>
                         </Route>

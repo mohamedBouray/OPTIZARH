@@ -1,17 +1,16 @@
 <?php
+
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SuperAdmin\RetraiteSetting;
 use Illuminate\Http\Request;
 
-class RetraiteController extends Controller{
-    public function getSettings($year)
-    {
+class RetraiteController extends Controller
+{
+    public function getSettings($year) {
         $settings = RetraiteSetting::where('year', $year)->first();
-        
         if (!$settings) {
-            // Ila mal9ach l-3am, n-rej3o default values
             return response()->json([
                 'year' => $year,
                 'age_legal' => 60,
@@ -19,13 +18,10 @@ class RetraiteController extends Controller{
                 'nb_fois' => 0
             ]);
         }
-
         return response()->json($settings);
     }
 
-    // Bach t-sauvegarder (dik handleSave dialek)
-    public function storeOrUpdate(Request $request)
-    {
+    public function storeOrUpdate(Request $request) {
         $validated = $request->validate([
             'year' => 'required|integer',
             'age_legal' => 'required|integer',
@@ -33,9 +29,19 @@ class RetraiteController extends Controller{
             'nb_fois' => 'required|integer',
         ]);
 
+        $exists = RetraiteSetting::where('year', $validated['year'])->exists();
+        $actionType = $exists ? 'UPDATE' : 'CREATE';
+        $actionText = $exists ? 'Mise à jour' : 'Configuration';
+
         $settings = RetraiteSetting::updateOrCreate(
-            ['year' => $validated['year']], // Condition
-            $validated                      // Data to update/create
+            ['year' => $validated['year']], 
+            $validated                      
+        );
+
+        $this->logActivity(
+            'Paramètres Retraite',
+            $actionType,
+            "{$actionText} des paramètres de retraite pour l'année {$validated['year']} (Âge: {$validated['age_legal']}, Durée max: {$validated['duree_max']})"
         );
 
         return response()->json([

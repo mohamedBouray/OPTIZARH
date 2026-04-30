@@ -56,12 +56,7 @@ class CreditController extends Controller
             ], 500);
         }
     }
-
-    /**
-     * Mettre à jour un produit de crédit existant.
-     */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id){
         try {
             $credit = Credit::findOrFail($id);
             
@@ -94,18 +89,13 @@ class CreditController extends Controller
         }
     }
 
-    /**
-     * Supprimer un produit de crédit.
-     */
-    public function destroy($id)
-    {
+    public function destroy($id){
         try {
             $credit = Credit::findOrFail($id);
             $creditName = $credit->name;
             
             $credit->delete();
 
-            // --- LOGS ACTIVITÉ ---
             $this->logActivity(
                 "Crédit", 
                 "DELETE", 

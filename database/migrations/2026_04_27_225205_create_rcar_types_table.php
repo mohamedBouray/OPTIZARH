@@ -15,7 +15,7 @@ return new class extends Migration
             // Foreign key pointing to your existing salary_year table
             $table->foreignId('salary_year_id')->constrained('salary_years')->onDelete('cascade');
             $table->string('label'); // Ex: 'Patronale' or 'Salariale'
-            $table->boolean('is_favorite')->default(false)->after('label');
+            $table->boolean('is_favorite')->default(false);
             $table->timestamps();
         });
     }
