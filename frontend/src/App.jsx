@@ -53,6 +53,7 @@ import Parametres from './routes/superadmin/Settings'//
 //Admin Components
 import AdminDashboard from './routes/Admin/Dashboard';
 // RH Components
+import RHDashboard from './routes/RH/Dashboard';
 // Employee Components
 import EmployeeDashboard from './routes/employee/Dashboard';
 
