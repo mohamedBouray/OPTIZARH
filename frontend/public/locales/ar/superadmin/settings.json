@@ -1,0 +1,13 @@
+{
+  "profile_image_label": "الصورة الشخصية",
+  "btn_initials": "الأحرف الأولى",
+  "btn_gravatar": "Gravatar",
+  "name_label": "الاسم الكامل",
+  "change_password_title": "تغيير كلمة المرور",
+  "placeholder_current_pass": "كلمة المرور الحالية",
+  "placeholder_new_pass": "كلمة المرور الجديدة",
+  "placeholder_confirm_pass": "تأكيد كلمة المرور",
+  "btn_update_password": "تحديث كلمة المرور",
+  "theme_label": "المظهر",
+  "language_label": "اللغة"
+}

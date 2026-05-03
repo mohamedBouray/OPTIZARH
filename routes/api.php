@@ -18,6 +18,7 @@ use App\Http\Controllers\SuperAdmin\EmployeeController;
 use App\Http\Controllers\SuperAdmin\GestionEtatController;
 use App\Http\Controllers\SuperAdmin\GestionIndemniteController;
 use App\Http\Controllers\SuperAdmin\CotisationController;
+use App\Http\Controllers\SuperAdmin\UserProfileController;
 
 use App\Http\Controllers\SuperAdmin\IrController;
 
@@ -28,6 +29,7 @@ use App\Http\Controllers\SuperAdmin\AssuranceController;
 
 
 use App\Http\Controllers\SuperAdmin\ActivityLogController;
+use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\RetraiteController;
 use App\Http\Controllers\SuperAdmin\CreditController;
 
@@ -54,6 +56,13 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('p
 | Protected Routes (Auth:Sanctum)
 |--------------------------------------------------------------------------
 */
+Route::get('/Settings/registration-status', function () {
+    $setting = \App\Models\SuperAdmin\Setting::where('key', 'registration_enabled')->first();
+    return response()->json([
+        'registration_enabled' => $setting ? (bool)$setting->value : true
+    ]);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
     Route::delete('/activity-logs/{id}', [ActivityLogController::class, 'destroy']);
@@ -210,6 +219,14 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::patch('/{id}/toggle', [CreditController::class, 'toggleStatus']);
             });
 
+            Route::prefix('Settings')->group(function () {
+                Route::get('/profile', [UserProfileController::class, 'show']);
+                Route::post('/profile', [UserProfileController::class, 'updateProfile']);
+                Route::post('/password', [UserProfileController::class, 'updatePassword']);
+                Route::get('/admin/platform-data', [SettingsController::class, 'index']); // Badel hada f React f fetchPlatformData
+                Route::post('/admin/settings', [SettingsController::class, 'updateRegistration']);
+                Route::patch('/admin/users/{id}/toggle-block', [SettingsController::class, 'toggleBlock']);
+            });
 
 
         });

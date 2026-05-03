@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import i18n from './i18n';
+import { I18nextProvider } from 'react-i18next';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { superAdminApi } from './lib/apis/superadmin';
 import { attachLoadingHandler } from "./lib/apis/axiosConfig";
@@ -35,9 +37,8 @@ import Credit from "./routes/superadmin/Credit";
 import Retraite from "./routes/superadmin/Retraite";
 import AssuranceManagement from './routes/superadmin/AssuranceManagement';
 import SNTLPage from "./routes/superadmin/SNTL";
-
 import Logs from "./routes/superadmin/Logs";
-import Parametres from './routes/superadmin/Settings'
+import Parametres from './routes/superadmin/Parametres'
 
 //Admin Components
 import AdminDashboard from './routes/Admin/Dashboard';
@@ -203,9 +204,12 @@ function AppContent() {
 export default function App(){
     return(
          <AuthProvider>
+            
             <ThemeProvider>
                 <LoadingProvider>
-                    <AppContent />
+                    <I18nextProvider i18n={i18n}>
+                        <AppContent />
+                    </I18nextProvider>
                 </LoadingProvider>
             </ThemeProvider>
         </AuthProvider>

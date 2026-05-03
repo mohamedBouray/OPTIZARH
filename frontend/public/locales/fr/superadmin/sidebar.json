@@ -1,0 +1,17 @@
+{
+  "dashboard": "Tableau de bord",
+  "users": "Utilisateurs",
+  "settings": "Paramétrages",
+  "allowances": "Indemnités",
+  "contributions": "Cotisation",
+  "rcar": "RCAR",
+  "ir": "IR",
+  "credit": "Crédit",
+  "retirement": "Retraite & Tamdid",
+  "insurance": "Assurances",
+  "sntl": "SNTL",
+  "administration": "Administration",
+  "logs": "Logs",
+  "config": "Paramètres",
+  "logout": "Déconnexion"
+}

@@ -1,0 +1,13 @@
+{
+  "profile_image_label": "Profile Image",
+  "btn_initials": "Initials",
+  "btn_gravatar": "Gravatar",
+  "name_label": "Full Name",
+  "change_password_title": "Change Password",
+  "placeholder_current_pass": "Current password",
+  "placeholder_new_pass": "New password",
+  "placeholder_confirm_pass": "Confirm password",
+  "btn_update_password": "Update password",
+  "theme_label": "Theme",
+  "language_label": "Language"
+}

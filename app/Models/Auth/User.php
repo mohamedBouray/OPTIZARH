@@ -25,6 +25,10 @@ class User extends Authenticatable{
         'sector',
         'employee_count',
         'role',
+
+        'profile_image',
+        'theme',
+        'language',
     ];
 
     /**

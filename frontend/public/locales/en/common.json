@@ -1,0 +1,16 @@
+{
+  "save": "Save",
+  "save_changes": "Save changes",
+  "cancel": "Cancel",
+  "remove": "Remove",
+  "edit": "Edit",
+  "delete": "Delete",
+  "add": "Add",
+  "search": "Search",
+  "loading": "Loading...",
+  "success_update": "Updated successfully",
+  "error_update": "An error occurred",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System"
+}

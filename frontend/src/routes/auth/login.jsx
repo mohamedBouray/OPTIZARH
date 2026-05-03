@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 import api from '../../lib/apis/axiosConfig'; 
@@ -9,6 +9,7 @@ import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext'; 
 
 const Login = () => {
+    const [isRegistrationEnabled, setIsRegistrationEnabled] = useState(true);
     const { showNotification } = useNotification();
     const { login } = useAuth();
 
@@ -21,28 +22,33 @@ const Login = () => {
         setCredentials({ ...credentials, [e.target.name]: e.target.value });
     };
 
+    useEffect(() => {
+        const checkRegistrationStatus = async () => {
+            try {
+                const response = await api.get('/api/Settings/registration-status');
+                setIsRegistrationEnabled(response.data.registration_enabled);
+            } catch (error) {
+                console.error("Erreur registration status:", error);
+            }
+        };
+        checkRegistrationStatus();
+    }, []);
+
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
             const response = await api.post('/api/login', credentials);
             const { access_token, user } = response.data;
-
-            // Stockage dyal info f localStorage
             localStorage.setItem("token", access_token);
             localStorage.setItem("user_name", user.full_name || user.name || `${user.prenom} ${user.nom}`);
             localStorage.setItem("role", user.role);
             localStorage.setItem("user", JSON.stringify(user));
             localStorage.setItem("user_email", user.email);
             
-            // Mise à jour dyal AuthContext
             login(user, access_token); 
-
-            // --- L-HMAZA HNA: Hyedna l-check dyal email_verified_at ---
             
             showNotification(`Bienvenue, ${user.full_name || 'utilisateur'}`, "success");
-            
-            // Redirect direct 3la hsab l-role
             const paths = {
                 superadmin: '/SuperAdmin/Dashboard',
                 admin: '/admin/dashboard',
@@ -54,6 +60,11 @@ const Login = () => {
 
         } catch (error) {
             const errorMsg = error.response?.data?.message || "Erreur de connexion";
+            if (status === 403) {
+            showNotification("Accès Refusé : " + errorMsg, "error");
+            setLoading(false);
+            return;
+        }
             showNotification(errorMsg, "error");
             console.warn("Détails de l'erreur:", errorMsg); 
         } finally {
@@ -140,9 +151,11 @@ const Login = () => {
                         </button>
                     </form>
 
-                    <p className="mt-8 text-center text-[13px] text-gray-500 font-medium">
-                        Nouvelle entreprise ? <Link to="/auth/register" className="text-[#4F46E5] font-black hover:underline">Créer un compte</Link>
-                    </p>
+                    {isRegistrationEnabled && (
+                        <p className="mt-8 text-center text-[13px] text-gray-500 font-medium">
+                            Nouvelle entreprise ? <Link to="/auth/register" className="text-[#4F46E5] font-black hover:underline">Créer un compte</Link>
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

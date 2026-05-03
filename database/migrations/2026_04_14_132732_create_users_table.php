@@ -17,6 +17,10 @@ public function up(): void
         $table->string('sector')->nullable();
         $table->integer('employee_count')->nullable();
         $table->string('role')->default('admin');
+        $table->string('profile_image')->nullable(); // Ghadi t-stori fih l-path
+        $table->string('theme')->default('light');    // default light kima f l-image
+        $table->string('language')->default('en');
+        $table->boolean('is_blocked')->default(false);
         $table->timestamps();
     });
 }

@@ -1,44 +1,35 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard,   
-  Users,            
-  Settings,          
-  Gift,             
-  PiggyBank,         
-  ShieldCheck,       
-  Percent,           
-  HandCoins,         
-  GraduationCap,     
-  Hospital,         
-  Truck,             
-  LogOut,           
-  History           
+import { 
+  LayoutDashboard, Users, Settings, Gift, PiggyBank, 
+  ShieldCheck, Percent, HandCoins, GraduationCap, 
+  Hospital, Truck, LogOut, History 
 } from "lucide-react";
 import axiosClient from "../../apis/axiosConfig";
+// import { useTranslation } from 'react-i18next'; // 1. Importi l-hook
 
 export default function Sidebar() {
-
+  // const { t, i18n } = useTranslation(['superadmin/sidebar', 'common']); // 2. Khdem b namespaces 'sidebar' w 'common'
   const location = useLocation();
   const active = location.pathname;
 
   const navItems = [
-    { label: "Tableau de bord", icon: <LayoutDashboard size={18} />, path: "/SuperAdmin/Dashboard" },
-    { label: "Utilisateurs", icon: <Users size={18} />, path: "/SuperAdmin/users" },
-    { label: "Parametrages", icon: <Settings size={18} />, path: "/SuperAdmin/Parametrages" },
-    { label: "Indemnités", icon: <Gift size={18} />, path: "/SuperAdmin/AffichageIndementes" },
-    { label: "Cotisation", icon: <PiggyBank size={18} />, path: "/SuperAdmin/Cotisation" },
-    { label: "RCAR", icon: <ShieldCheck size={18} />, path: "/SuperAdmin/RCAR" },
-    { label: "IR", icon: <Percent size={18} />, path: "/SuperAdmin/IRAffichage" },
-    { label: "Crédit", icon: <HandCoins size={18} />, path: "/SuperAdmin/Credit" },
-    { label: "Retraite & Tamdid", icon: <GraduationCap size={18} />, path: "/SuperAdmin/Retraite" },
-    { label: "Assurances", icon: <Hospital size={18} />, path: "/SuperAdmin/assurances" },
-    { label: "SNTL", icon: <Truck size={18} />, path: "/SuperAdmin/SNTL" },
+    { label: 'dashboard', icon: <LayoutDashboard size={18} />, path: "/SuperAdmin/Dashboard" },
+    { label: 'users', icon: <Users size={18} />, path: "/SuperAdmin/users" },
+    { label: 'settings', icon: <Settings size={18} />, path: "/SuperAdmin/Parametrages" },
+    { label: 'allowances', icon: <Gift size={18} />, path: "/SuperAdmin/AffichageIndementes" },
+    { label: 'contributions', icon: <PiggyBank size={18} />, path: "/SuperAdmin/Cotisation" },
+    { label: 'rcar', icon: <ShieldCheck size={18} />, path: "/SuperAdmin/RCAR" },
+    { label: 'ir', icon: <Percent size={18} />, path: "/SuperAdmin/IRAffichage" },
+    { label: 'credit', icon: <HandCoins size={18} />, path: "/SuperAdmin/Credit" },
+    { label: 'retirement', icon: <GraduationCap size={18} />, path: "/SuperAdmin/Retraite" },
+    { label: 'insurance', icon: <Hospital size={18} />, path: "/SuperAdmin/assurances" },
+    { label: 'sntl', icon: <Truck size={18} />, path: "/SuperAdmin/SNTL" },
   ];
   
   const adminItems = [
-    { label: "Logs", icon: <History size={18} />, path: "/SuperAdmin/Logs" },
-    { label: "Paramètres", icon: <Settings size={18} />, path: "/SuperAdmin/Parametres" },
+    { label: 'logs', icon: <History size={18} />, path: "/SuperAdmin/Logs" },
+    { label: 'config', icon: <Settings size={18} />, path: "/SuperAdmin/Parametres" },
   ];
 
   const handleLogout = async () => {
@@ -57,7 +48,7 @@ export default function Sidebar() {
       {/* Logo Section */}
       <div className="p-5 mb-4">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-xl shadow-lg shadow-indigo-100 dark:shadow-none">
+          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-xl shadow-lg">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
               <path d="M12 3v18M20 8l-8-5-8 5M20 16l-8 5-8-5" />
             </svg>
@@ -69,30 +60,20 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2 px-2 custom-scrollbar">
-        {/* Main Navigation */}
         <div className="space-y-1">
           {navItems.map((item) => {
             const isItemActive = active === item.path || active.startsWith(item.path + "/");
-            return (
-              <NavItem 
-                key={item.path} 
-                item={item} 
-                isActive={isItemActive} 
-              />
-            );
+            return <NavItem key={item.path} item={item} isActive={isItemActive} />;
           })}
         </div>
 
-        {/* Admin Section Divider */}
         <div className="px-4 mt-8 mb-3">
           <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
-            Administration
+            administration
           </span>
         </div>
 
-        {/* Admin Navigation */}
         <div className="space-y-1">
           {adminItems.map((item) => (
             <NavItem key={item.path} item={item} isActive={active === item.path} />
@@ -100,21 +81,19 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* Footer - Logout */}
       <div className="p-4 border-t border-gray-100 dark:border-[#2A2A2A] bg-gray-50/30 dark:bg-[#1A1A1A]">
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-4 py-3 text-red-600 dark:text-red-400 font-bold text-sm hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-all duration-200 group cursor-pointer"
         >
           <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-          Déconnexion
+          logout {/* 5. Logout label i18n */}
         </button>
       </div>
     </aside>
   );
 }
 
-// Composant NavItem
 function NavItem({ item, isActive }) {
   return (
     <Link
@@ -127,17 +106,10 @@ function NavItem({ item, isActive }) {
         }
       `}
     >
-      {/* Active indicator */}
-      {isActive && (
-        <div className="absolute left-0 w-1 h-6 bg-indigo-600 dark:bg-indigo-500 rounded-r-full" />
-      )}
-      
-      {/* Icon */}
+      {isActive && <div className="absolute left-0 w-1 h-6 bg-indigo-600 dark:bg-indigo-500 rounded-r-full" />}
       <span className={`${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
         {item.icon}
       </span>
-      
-      {/* Label */}
       <span>{item.label}</span>
     </Link>
   );

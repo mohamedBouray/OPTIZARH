@@ -1,0 +1,16 @@
+{
+  "save": "حفظ",
+  "save_changes": "حفظ التغييرات",
+  "cancel": "إلغاء",
+  "remove": "إزالة",
+  "edit": "تعديل",
+  "delete": "حذف",
+  "add": "إضافة",
+  "search": "بحث",
+  "loading": "جاري التحميل...",
+  "success_update": "تم التحديث بنجاح",
+  "error_update": "حدث خطأ ما",
+  "light": "فاتح",
+  "dark": "داكن",
+  "system": "النظام"
+}

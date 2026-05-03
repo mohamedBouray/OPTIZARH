@@ -60,6 +60,11 @@ class AuthController extends Controller{
         if (!Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Le mot de passe est incorrect'], 401);
         }
+        if ($user->is_blocked) {
+            return response()->json([
+                'message' => 'Votre compte est suspendu. Veuillez contacter l\'administrateur.'
+            ], 403); // 403 Forbidden
+        }
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://optizarh-production.up.railway.app",
+    baseURL: "http://localhost:8080",
+    //"https://optizarh-production.up.railway.app"
     withCredentials: true,
     headers: {
         "Content-Type": "application/json",
