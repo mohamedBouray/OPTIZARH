@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\SuperAdmin\UserProfileController;
 
 use App\Http\Controllers\SuperAdmin\SuperAdminController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\SuperAdmin\SntlSettingController;
 use App\Http\Controllers\SuperAdmin\RetraiteController;
 use App\Http\Controllers\SuperAdmin\AssuranceController;
 use App\Http\Controllers\SuperAdmin\ActivityLogController;
+use App\Http\Controllers\SuperAdmin\SettingsController;
 
 
 
@@ -47,6 +49,15 @@ Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
 | Protected Routes (Auth:Sanctum)
 |--------------------------------------------------------------------------
 */
+
+Route::get('/Settings/registration-status', function () {
+    $setting = \App\Models\SuperAdmin\Setting::where('key', 'registration_enabled')->first();
+    return response()->json([
+        'registration_enabled' => $setting ? (bool)$setting->value : true
+    ]);
+});
+
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
     Route::delete('/activity-logs/{id}', [ActivityLogController::class, 'destroy']);
@@ -82,22 +93,27 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/{id}', [EmployeeController::class, 'show'])->name('employees.show');
                 Route::put('/{id}', [EmployeeController::class, 'update'])->name('employees.update');
                 Route::delete('/{id}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+                
+                Route::get('/{employeeId}/credits', [EmployeeController::class, 'getCredits']);
+                Route::post('/{employeeId}/credits', [EmployeeController::class, 'addCredit']);
+                Route::put('/credits/{creditId}', [EmployeeController::class, 'updateCredit']);
+                Route::delete('/credits/{creditId}', [EmployeeController::class, 'deleteCredit']);
             });
 
             Route::prefix('gestionEtat')->group(function () {
                 Route::get('/years', [GestionEtatController::class, 'getYears']);
                 Route::post('/store', [GestionEtatController::class, 'store']);
                 Route::get('/get-by-year/{year}', [GestionEtatController::class, 'getByYear']);
-                Route::get('/roles/{yearId}', [GestionEtatController::class, 'getRoles']);
-                Route::get('/grades/{roleId}', [GestionEtatController::class, 'getGrades']);
+                Route::get('/posts/{yearId}', [GestionEtatController::class, 'getPosts']);
+                Route::get('/grades/{postId}', [GestionEtatController::class, 'getGrades']);
+                Route::get('/post-details/{postId}', [GestionEtatController::class, 'getPostDetails']);
+                Route::get('/starred-posts', [GestionEtatController::class, 'getStarredPosts']);
+                Route::put('/post/{id}/toggle-star', [GestionEtatController::class, 'toggleStarredPost']);
+                Route::delete('/post/{id}', [GestionEtatController::class, 'destroyPost']);
                 Route::get('/echelles/{gradeId}', [GestionEtatController::class, 'getEchelles']);
                 Route::get('/echelons/{echelleId}', [GestionEtatController::class, 'getEchelons']);
-                Route::get('/role-details/{roleId}', [GestionEtatController::class, 'getRoleDetails']);
                 Route::get('/grade-details/{gradeId}', [GestionEtatController::class, 'getGradeDetails']);
                 Route::get('/echelon-details/{id}', [GestionEtatController::class, 'getEchelonDetails']);
-                Route::get('/starred-roles', [GestionEtatController::class, 'getStarredRoles']);
-                Route::put('/role/{id}/toggle-star', [GestionEtatController::class, 'toggleStarredRole']);
-                Route::delete('/role/{id}', [GestionEtatController::class, 'destroyRole']);
                 Route::delete('/grade/{id}', [GestionEtatController::class, 'destroyGrade']);
                 Route::delete('/echelle/{id}', [GestionEtatController::class, 'destroyEchelle']);
                 Route::delete('/echelon/{id}', [GestionEtatController::class, 'destroyEchelon']);
@@ -204,6 +220,14 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/save', [SntlSettingController::class, 'store']);
                 Route::delete('/configs/{id}', [SntlSettingController::class, 'destroy']);
                 Route::get('/configs/{year}', [SntlSettingController::class, 'getByYear']);
+            });
+            Route::prefix('Settings')->group(function () {
+                Route::get('/profile', [UserProfileController::class, 'show']);
+                Route::post('/profile', [UserProfileController::class, 'updateProfile']);
+                Route::post('/password', [UserProfileController::class, 'updatePassword']);
+                Route::get('/admin/platform-data', [SettingsController::class, 'index']); // Badel hada f React f fetchPlatformData
+                Route::post('/admin/settings', [SettingsController::class, 'updateRegistration']);
+                Route::patch('/admin/users/{id}/toggle-block', [SettingsController::class, 'toggleBlock']);
             });
 
         });

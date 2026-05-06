@@ -134,7 +134,7 @@ const GestionIR = () => {
             const res = await api.get('/api/ir/annees-for-settings');
             setAnneesList(res.data || []);
         } catch (e) { 
-            showNotification("❌ Erreur lors de la suppression", "error");
+            showNotification(" Erreur lors de la suppression", "error");
         } finally { 
             setLoading(false);
             closeDeleteModal();
@@ -154,16 +154,16 @@ const GestionIR = () => {
             const max = parseFloat(row.max || 0);
             
             if (min < 0) {
-                showNotification(`❌ Erreur tranche ${i + 1}: Le minimum ne peut pas être négatif`, "error");
+                showNotification(` Erreur tranche ${i + 1}: Le minimum ne peut pas être négatif`, "error");
                 return;
             }
             if (max < 0) {
-                showNotification(`❌ Erreur tranche ${i + 1}: Le maximum ne peut pas être négatif`, "error");
+                showNotification(` Erreur tranche ${i + 1}: Le maximum ne peut pas être négatif`, "error");
                 return;
             }
             // Pour toutes les tranches sauf la dernière, max doit être > min
             if (i < rows.length - 1 && max <= min) {
-                showNotification(`❌ Erreur tranche ${i + 1}: Le maximum (${max}) doit être supérieur au minimum (${min})`, "error");
+                showNotification(` Erreur tranche ${i + 1}: Le maximum (${max}) doit être supérieur au minimum (${min})`, "error");
                 return;
             }
         }
@@ -171,16 +171,12 @@ const GestionIR = () => {
         // Cohérence entre tranches
         for (let i = 0; i < rows.length - 1; i++) {
             const currentMax = parseFloat(rows[i].max || 0);
-            const nextMin = parseFloat(rows[i + 1].min || 0);
-            if (currentMax !== nextMin) {
-                showNotification(`❌ Erreur: La tranche ${i + 1} max (${currentMax}) doit être égale à la tranche ${i + 2} min (${nextMin})`, "error");
-                return;
-            }
+            const nextMin = parseFloat(rows[i + 1].min || 0) ;
         }
 
         setLoading(true);
         try {
-            // ✅ CRUCIAL: Transformer la dernière tranche en illimitée (max = 0)
+            //  CRUCIAL: Transformer la dernière tranche en illimitée (max = 0)
             const rowsToSave = [...rows];
             const lastIndex = rowsToSave.length - 1;
             rowsToSave[lastIndex].max = 0;
@@ -196,15 +192,15 @@ const GestionIR = () => {
 
             await api.post(`/api/ir/settings/${annee}`, { data_rows: cleanedRows });
             
-            // ✅ Mettre à jour l'affichage local
+            //  Mettre à jour l'affichage local
             const updatedRows = [...rows];
             updatedRows[updatedRows.length - 1].max = 0;
             setRows(updatedRows);
             
-            showNotification(`✅ Configuration ${annee} enregistrée avec succès`, "success");
+            showNotification(` Configuration ${annee} enregistrée avec succès`, "success");
         } catch (e) { 
             const msg = e.response?.data?.message || "Erreur lors de l'enregistrement";
-            showNotification(`❌ ${msg}`, "error");
+            showNotification(` ${msg}`, "error");
         } finally { 
             setLoading(false); 
         }
@@ -239,7 +235,7 @@ const GestionIR = () => {
             window.URL.revokeObjectURL(url);
             showNotification("📄 PDF exporté avec succès", "success");
         } catch (e) {
-            showNotification("❌ Erreur lors de l'export PDF", "error");
+            showNotification(" Erreur lors de l'export PDF", "error");
         } finally {
             setLoading(false);
         }
@@ -336,7 +332,7 @@ const GestionIR = () => {
                 setRows(newRows);
                 showNotification("🗑️ Tranche supprimée avec succès", "success");
             } catch (e) {
-                showNotification("❌ Erreur lors de la suppression", "error");
+                showNotification(" Erreur lors de la suppression", "error");
             } finally {
                 setLoading(false);
             }

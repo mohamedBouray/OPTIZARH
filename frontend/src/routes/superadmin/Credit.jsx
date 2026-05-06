@@ -357,7 +357,7 @@ const ConsultationCredits = () => {
                         <span className="font-semibold">{credit.interest_rate}%</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className={textMutedClass}>⏱️ Durée</span>
+                        <span className={textMutedClass}> Durée</span>
                         <span className="font-semibold">{credit.max_duration} mois</span>
                       </div>
                       {credit.description && (

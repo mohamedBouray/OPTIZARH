@@ -353,7 +353,7 @@ const GestionCotisation = () => {
               {/* Card Header */}
               <div className={`px-5 py-3 border-b ${borderClass} flex justify-between items-center ${darkMode ? 'bg-[#252525]' : 'bg-gray-50/50'}`}>
                 <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-2 rounded-lg text-white shadow-md">
+                  <div className="bg-blue-600p-2 rounded-lg text-white shadow-md">
                     <Building2 size={16} />
                   </div>
                   <input 
@@ -475,7 +475,7 @@ const GestionCotisation = () => {
 
         {/* Save Button */}
         <div className="fixed bottom-6 right-6 z-50">
-          <button onClick={handleSave} disabled={loading} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 cursor-pointer">
+          <button onClick={handleSave} disabled={loading} className="flex items-center gap-2 px-6 py-3 bg-blue-600text-white rounded-xl font-bold shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 cursor-pointer">
             {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
             <span className="text-sm uppercase tracking-wide">Sauvegarder</span>
           </button>

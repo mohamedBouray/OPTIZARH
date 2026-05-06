@@ -114,7 +114,7 @@ const GestionRCAR = () => {
         }
       } catch (error) {
         console.error("Erreur fetching years:", error);
-        showNotification("❌ Erreur chargement des années", "error");
+        showNotification(" Erreur chargement des années", "error");
       }
     };
     fetchYears();
@@ -159,7 +159,7 @@ const GestionRCAR = () => {
       }
     } catch (error) {
       console.error("Erreur de chargement:", error);
-      showNotification("❌ Erreur chargement configuration", "error");
+      showNotification(" Erreur chargement configuration", "error");
     } finally {
       setFetching(false);
     }
@@ -230,9 +230,9 @@ const GestionRCAR = () => {
       try {
         await api.delete(`/api/rcar/type/${typeId}`);
         setRcarData(prev => ({ ...prev, types: prev.types.filter(t => t.id !== typeId) }));
-        showNotification("✅ Organisme supprimé avec succès", "success");
+        showNotification(" Organisme supprimé avec succès", "success");
       } catch (error) {
-        showNotification("❌ Erreur lors de la suppression", "error");
+        showNotification(" Erreur lors de la suppression", "error");
       }
     } else if (deleteModal.type === 'detail') {
       const { typeId, detailId } = deleteModal;
@@ -253,9 +253,9 @@ const GestionRCAR = () => {
           t.id === typeId ? { ...t, details: t.details.filter(d => d.id !== detailId) } : t
         );
         setRcarData(prev => ({ ...prev, types: updated }));
-        showNotification("✅ Ligne supprimée avec succès", "success");
+        showNotification(" Ligne supprimée avec succès", "success");
       } catch (error) {
-        showNotification("❌ Erreur lors de la suppression", "error");
+        showNotification(" Erreur lors de la suppression", "error");
       }
     }
     closeDeleteModal();
@@ -291,7 +291,7 @@ const GestionRCAR = () => {
     } catch (error) {
       console.error("Erreur favorite:", error);
       fetchConfig(selectedYear);
-      showNotification("❌ Erreur", "error");
+      showNotification(" Erreur", "error");
     }
   };
 
@@ -307,7 +307,7 @@ const GestionRCAR = () => {
   // ============================================================
   const handleSave = async () => {
     if (!rcarData.salary_year_id) {
-      showNotification("❌ Erreur: Aucun ID d'année trouvé", "error");
+      showNotification(" Erreur: Aucun ID d'année trouvé", "error");
       return;
     }
 
@@ -342,10 +342,10 @@ const GestionRCAR = () => {
 
     try {
       await api.post('/api/rcar/config/save', payload);
-      showNotification("✅ Configuration RCAR enregistrée !", "success");
+      showNotification(" Configuration RCAR enregistrée !", "success");
       fetchConfig(selectedYear);
     } catch (error) {
-      showNotification("❌ Erreur de sauvegarde", "error");
+      showNotification(" Erreur de sauvegarde", "error");
     } finally {
       setLoading(false);
     }

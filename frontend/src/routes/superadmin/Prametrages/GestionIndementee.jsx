@@ -20,7 +20,7 @@ const GestionIndemnitee = () => {
     const [selectedYearId, setSelectedYearId] = useState(null);
     const [configData, setConfigData] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [selectedRole, setSelectedRole] = useState(null);
+    const [selectedPost, setSelectedPost] = useState(null);
     const [selectedGrade, setSelectedGrade] = useState(null);
     const [selectedEchelle, setSelectedEchelle] = useState(null);
     const [selectedEchelon, setSelectedEchelon] = useState(null);
@@ -33,7 +33,7 @@ const GestionIndemnitee = () => {
         libelle: '',
         type: 'Fixe',
         valeur: '',
-        role_id: '',
+        Post_id: '',
         grade_id: '',
         echelle_id: '',
         echelon_id: '',
@@ -118,10 +118,10 @@ const GestionIndemnitee = () => {
         showNotification(` Année ${yearValue} sélectionnée`, "success");
     };
 
-    const handleRoleChange = (roleId) => {
-        setForm({ ...form, role_id: roleId, grade_id: '', echelle_id: '', echelon_id: '' });
-        const role = configData?.roles?.find(r => r.id == roleId);
-        setSelectedRole(role);
+    const handlePostChange = (postId) => {
+        setForm({ ...form, Post_id: postId, grade_id: '', echelle_id: '', echelon_id: '' });
+        const post = configData?.Post?.find(p => p.id == postId);
+        setSelectedPost(post);
         setSelectedGrade(null);
         setSelectedEchelle(null);
         setSelectedEchelon(null);
@@ -131,7 +131,7 @@ const GestionIndemnitee = () => {
 
     const handleGradeChange = (gradeId) => {
         setForm({ ...form, grade_id: gradeId, echelle_id: '', echelon_id: '' });
-        const grade = selectedRole?.grades?.find(g => g.id == gradeId);
+        const grade = selectedPost?.grades?.find(g => g.id == gradeId);
         setSelectedGrade(grade);
         setSelectedEchelle(null);
         setSelectedEchelon(null);
@@ -162,17 +162,17 @@ const GestionIndemnitee = () => {
     };
 
     const resetForm = () => {
-        setForm({
+       setForm({
             libelle: '',
             type: 'Fixe',
             valeur: '',
-            role_id: '',
+            Post_id: '',  
             grade_id: '',
             echelle_id: '',
             echelon_id: '',
             is_for_all: false
         });
-        setSelectedRole(null);
+        setSelectedPost(null);
         setSelectedGrade(null);
         setSelectedEchelle(null);
         setSelectedEchelon(null);
@@ -187,8 +187,8 @@ const GestionIndemnitee = () => {
             return;
         }
 
-        if (!form.is_for_all && !form.role_id) {
-            showNotification(" Veuillez sélectionner un rôle ou activer 'Pour tous'", "error");
+        if (!form.is_for_all && !form.Post_id) {
+            showNotification(" Veuillez sélectionner un poste ou activer 'Pour tous'", "error");
             return;
         }
 
@@ -351,8 +351,8 @@ const GestionIndemnitee = () => {
                                         value={form.type}
                                         onChange={e => setForm({...form, type: e.target.value, valeur: ''})}
                                     >
-                                        <option value="Fixe">💰 Fixe (MAD)</option>
-                                        <option value="Pourcentage">📈 Pourcentage (%)</option>
+                                        <option value="Fixe">Fixe (MAD)</option>
+                                        <option value="Pourcentage">Pourcentage (%)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -375,8 +375,8 @@ const GestionIndemnitee = () => {
                             <div 
                                 className={`relative p-4 rounded-xl border-2 transition-all cursor-pointer ${form.is_for_all ? 'border-indigo-500 bg-indigo-500/10' : borderClass} ${hoverClass}`}
                                 onClick={() => {
-                                    setForm({...form, is_for_all: !form.is_for_all, role_id: '', grade_id: '', echelle_id: '', echelon_id: ''});
-                                    setSelectedRole(null);
+                                    setForm({...form, is_for_all: !form.is_for_all, Post_id: '', grade_id: '', echelle_id: '', echelon_id: ''});
+                                    setSelectedPost(null);
                                     setSelectedGrade(null);
                                     setSelectedEchelle(null);
                                     setSelectedEchelon(null);
@@ -398,22 +398,22 @@ const GestionIndemnitee = () => {
                                 <div className="space-y-4 animate-fadeIn">
                                     <div>
                                         <label className={`text-xs font-bold ${textMutedClass} mb-1.5 block flex items-center gap-1 uppercase tracking-wider`}>
-                                            <Users size={12}/> Rôle *
+                                            <Users size={12}/> Post *
                                         </label>
                                         <select 
                                             className={`w-full p-3 rounded-xl outline-none transition-all ${selectClass} border ${borderClass} ${textClass}`}
-                                            value={form.role_id}
-                                            onChange={(e) => handleRoleChange(e.target.value)}
+                                            value={form.Post_id}
+                                            onChange={(e) => handlePostChange(e.target.value)}
                                         >
                                             <option value="">-- Choisir un rôle --</option>
-                                            {configData?.roles?.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                            {configData?.Post?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                         </select>
                                     </div>
 
-                                    {selectedRole && selectedRole.grades?.length > 0 && (
+                                    {selectedPost && selectedPost.grades?.length > 0 && (
                                         <div className="animate-fadeIn">
                                             <label className={`text-xs font-bold ${textMutedClass} mb-1.5 block flex items-center gap-1 uppercase tracking-wider`}>
-                                                <Award size={12}/> Grade (Optionnel)
+                                                <Award size={12}/> Grade 
                                             </label>
                                             <select 
                                                 className={`w-full p-3 rounded-xl outline-none transition-all ${selectClass} border ${borderClass} ${textClass}`}
@@ -421,7 +421,7 @@ const GestionIndemnitee = () => {
                                                 onChange={(e) => handleGradeChange(e.target.value)}
                                             >
                                                 <option value="">-- Tous les grades --</option>
-                                                {selectedRole.grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                                {selectedPost.grades.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                                             </select>
                                         </div>
                                     )}
@@ -429,7 +429,7 @@ const GestionIndemnitee = () => {
                                     {selectedGrade && selectedGrade.echelles?.length > 0 && (
                                         <div className="animate-fadeIn">
                                             <label className={`text-xs font-bold ${textMutedClass} mb-1.5 block flex items-center gap-1 uppercase tracking-wider`}>
-                                                <Grid3x3 size={12}/> Échelle (Optionnel)
+                                                <Grid3x3 size={12}/> Échelle 
                                             </label>
                                             <select 
                                                 className={`w-full p-3 rounded-xl outline-none transition-all ${selectClass} border ${borderClass} ${textClass}`}
@@ -445,7 +445,7 @@ const GestionIndemnitee = () => {
                                     {selectedEchelle && selectedEchelle.echelons?.length > 0 && (
                                         <div className="animate-fadeIn">
                                             <label className={`text-xs font-bold ${textMutedClass} mb-1.5 block flex items-center gap-1 uppercase tracking-wider`}>
-                                                <Hash size={12}/> Échelon (Optionnel)
+                                                <Hash size={12}/> Échelon 
                                             </label>
                                             <select 
                                                 className={`w-full p-3 rounded-xl outline-none transition-all ${selectClass} border ${borderClass} ${textClass}`}
@@ -475,7 +475,7 @@ const GestionIndemnitee = () => {
                                         </div>
                                     )}
 
-                                    {selectedRole && selectedRole.grades?.length === 0 && (
+                                    {selectedPost && selectedPost.grades?.length === 0 && (
                                         <div className={`p-3 rounded-xl border ${darkMode ? 'bg-amber-900/20 border-amber-800' : 'bg-amber-50 border-amber-200'}`}>
                                             <p className={`text-xs flex items-center gap-2 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>
                                                 <AlertCircle size={12}/>
@@ -490,7 +490,7 @@ const GestionIndemnitee = () => {
                                 <button 
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className=" cursor-pointer flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className=" cursor-pointer flex-1 bg-blue-600hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     {loading ? <Loader2 size={18} className="animate-spin"/> : <Plus size={18} />}
                                     {loading ? "Enregistrement..." : "Enregistrer l'indemnité"}

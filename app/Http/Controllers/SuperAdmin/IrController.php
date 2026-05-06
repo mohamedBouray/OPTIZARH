@@ -155,12 +155,6 @@ class IrController extends Controller
         for ($i = 0; $i < count($dataRows) - 1; $i++) {
             $currentMax = $dataRows[$i]['max'];
             $nextMin = $dataRows[$i + 1]['min'];
-            
-            if ($currentMax != 0 && $currentMax != $nextMin) {
-                return response()->json([
-                    'message' => "Erreur: La tranche " . ($i + 1) . " max ($currentMax) doit être égale à la tranche " . ($i + 2) . " min ($nextMin)"
-                ], 422);
-            }
         }
 
         try {

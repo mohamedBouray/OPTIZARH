@@ -15,7 +15,7 @@ class CreditController extends Controller
     public function getTypes()
     {
         $types = CreditType::with('categories')->orderBy('sort_order')->get();
-        
+        \Log::info('Types récupérés: ' . $types->count()); 
         $this->logActivity(
             'Consultation types crédit',
             'READ',
@@ -24,7 +24,6 @@ class CreditController extends Controller
         
         return response()->json($types);
     }
-
     public function storeType(Request $request)
     {
         $request->validate([

@@ -3,8 +3,9 @@ namespace App\Models\SuperAdmin;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Role extends Model
+class Post extends Model
 {
+    protected $table = 'Post'; 
     protected $fillable = ['salary_year_id', 'name', 'is_starred'];
 
     public function salaryYear() {
@@ -12,7 +13,7 @@ class Role extends Model
     }
 
     public function grades() {
-        return $this->hasMany(Grade::class);
+        return $this->hasMany(Grade::class, 'Post_id');  
     }
 
     public function scopeStarred($query) {

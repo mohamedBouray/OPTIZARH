@@ -22,7 +22,7 @@ const GestionSNTL = () => {
   const yearRef = useRef(null);
   
   const [sntlData, setSntlData] = useState([]);
-  const [roles, setRoles] = useState([]);
+ const [posts, setPosts] = useState([]);
 
   // ============================================================
   // FONCTION DE VALIDATION SELON LE TYPE DE MONTANT
@@ -115,8 +115,9 @@ const GestionSNTL = () => {
     const fetchRoles = async () => {
       if (!selectedYearId || availableYears.length === 0) return;
       try {
-        const res = await api.get(`/api/gestionEtat/roles/${selectedYearId}`);
-        setRoles(res.data);
+        const res = await api.get(`/api/gestionEtat/posts/${selectedYearId}`);
+        setPosts(res.data);
+
       } catch (err) { 
         console.error("Erreur roles", err); 
       }
@@ -137,8 +138,8 @@ const GestionSNTL = () => {
         let echelles = [];
         let echelons = [];
 
-        if (item.role_id) {
-          const resG = await api.get(`/api/gestionEtat/grades/${item.role_id}`);
+        if (item.Post_id) {
+          const resG = await api.get(`/api/gestionEtat/grades/${item.Post_id}`);
           grades = resG.data;
         }
         if (item.grade_id) {
@@ -178,13 +179,13 @@ const GestionSNTL = () => {
   }, [selectedYearId]);
 
   // --- Handlers ---
-  const handleRoleChange = async (configId, roleId) => {
+ const handlePostChange = async (configId, postId) => {
     try {
-      const res = await api.get(`/api/gestionEtat/grades/${roleId}`);
+      const res = await api.get(`/api/gestionEtat/grades/${postId}`);
       setSntlData(prev => prev.map(c => 
         c.id === configId ? { 
           ...c, 
-          role_id: roleId, 
+          Post_id: postId,
           grade_id: '', 
           echelle: '', 
           echelon: '',
@@ -233,7 +234,7 @@ const GestionSNTL = () => {
       valeur: 0,
       type_montant: "fixe",
       categorie_cible: "tous",
-      role_id: "",
+      Post_id: "",
       grade_id: "",
       echelle: "",
       echelon: "",
@@ -303,7 +304,7 @@ const GestionSNTL = () => {
           valeur: item.valeur,
           type_montant: item.type_montant,
           categorie_cible: item.categorie_cible,
-          role_id: isSpecifique ? (item.role_id || null) : null,
+          Post_id: isSpecifique ? (item.Post_id || null) : null,
           grade_id: isSpecifique ? (item.grade_id || null) : null,
           echelle_id: isSpecifique ? (item.echelle || null) : null, 
           echelon_id: isSpecifique ? (item.echelon || null) : null,
@@ -345,7 +346,7 @@ const GestionSNTL = () => {
         const cible = item.categorie_cible === 'tous' ? 'Tous les agents' : 'Spécifique';
         let details = "-";
         if (item.categorie_cible === 'cadres') {
-          const roleName = roles.find(r => r.id == item.role_id)?.name || '';
+          const postName = posts.find(p => p.id == item.Post_id)?.name || '';
           const gradeName = item.availableGrades?.find(g => g.id == item.grade_id)?.name || '';
           details = `${roleName}${gradeName ? ' > ' + gradeName : ''}`;
         }
@@ -578,14 +579,13 @@ const GestionSNTL = () => {
                     <div className={`pt-4 border-t p-4 rounded-xl space-y-4 ${darkMode ? 'border-[#333] bg-indigo-900/10' : 'border-slate-100 bg-blue-50/30'}`}>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="space-y-2">
-                          <label className={`text-[10px] font-black uppercase italic ${textMutedClass}`}>Role</label>
+                          <label className={`text-[10px] font-black uppercase italic ${textMutedClass}`}>Post</label>
                           <select 
                             className={`w-full ${inputBgClass} border rounded-lg p-2.5 text-sm outline-none cursor-pointer`}
-                            value={config.role_id || ''}
-                            onChange={(e) => handleRoleChange(config.id, e.target.value)}
-                          >
-                            <option value="">Sélectionner Role (Optionnel)</option>
-                            {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                             value={config.Post_id || ''} 
+                            onChange={(e) => handlePostChange(config.id, e.target.value)}>
+                            <option value="">Sélectionner Post (Optionnel)</option>
+                            {posts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                           </select>
                         </div>
                         <div className="space-y-2">
@@ -594,7 +594,7 @@ const GestionSNTL = () => {
                             className={`w-full ${inputBgClass} border rounded-lg p-2.5 text-sm outline-none cursor-pointer`}
                             value={config.grade_id || ''}
                             onChange={(e) => handleGradeChange(config.id, e.target.value)}
-                            disabled={!config.role_id}
+                            disabled={!config.Post_id}
                           >
                             <option value="">Sélectionner Grade</option>
                             {config.availableGrades?.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}

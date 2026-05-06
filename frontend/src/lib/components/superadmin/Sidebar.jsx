@@ -12,8 +12,8 @@ export default function Sidebar({ onLinkClick, isMobile }) {
     
     const navItems = [
         { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, path: "/SuperAdmin/Dashboard" },
-        { label: "Utilisateurs", icon: <Users size={20} />, path: "/SuperAdmin/users" },
         { label: "Paramétrages", icon: <Settings size={20} />, path: "/SuperAdmin/Parametrages" },
+        { label: "Utilisateurs", icon: <Users size={20} />, path: "/SuperAdmin/users" },
         { label: "Indemnités", icon: <Gift size={20} />, path: "/SuperAdmin/AffichageIndementes" },
         { label: "Cotisation", icon: <PiggyBank size={20} />, path: "/SuperAdmin/Cotisation" },
         { label: "RCAR", icon: <ShieldCheck size={20} />, path: "/SuperAdmin/RCAR" },
