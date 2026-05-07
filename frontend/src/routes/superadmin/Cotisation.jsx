@@ -155,7 +155,7 @@ const yearRef = useRef(null);
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 p-4 md:p-8 font-sans ${bgClass}`}>
+    <div className={`min-h-screen transition-colors duration-300 p-2 md:p-2 font-sans ${bgClass}`}>
       <div className="max-w-6xl mx-auto">
         
         

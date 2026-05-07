@@ -18,7 +18,7 @@ public function up(): void
         $table->integer('employee_count')->nullable();
         $table->string('role')->default('admin');
         $table->timestamp('email_verified_at')->nullable();
-        $table->string('profile_image')->nullable(); 
+        $table->text('profile_image')->nullable();
         $table->string('theme')->default('light');   
         $table->string('language')->default('en');
         $table->boolean('is_blocked')->default(false);

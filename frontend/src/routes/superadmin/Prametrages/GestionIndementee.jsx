@@ -43,7 +43,7 @@ const GestionIndemnitee = () => {
     // Dark mode classes
     const bgClass = darkMode ? 'bg-[#0D0D0D]' : 'bg-gradient-to-br from-gray-50 via-gray-50 to-indigo-50/20';
     const cardClass = darkMode ? 'bg-[#1A1A1A] border-[#2A2A2A]' : 'bg-white border-gray-200';
-    const cardHeaderClass = darkMode ? 'bg-gradient-to-r from-indigo-800 to-purple-800' : 'bg-gradient-to-r from-indigo-600 to-purple-600';
+    const cardHeaderClass = darkMode ? 'bg-blue-600 to-purple-800' : 'bg-blue-600  to-purple-600';
     const textClass = darkMode ? 'text-gray-100' : 'text-gray-800';
     const textMutedClass = darkMode ? 'text-gray-500' : 'text-gray-500';
     const inputClass = darkMode ? 'bg-[#252525] border-[#333] text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500' : 'bg-gray-50 border-gray-200 text-gray-800 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400';
@@ -178,7 +178,6 @@ const GestionIndemnitee = () => {
         setSelectedEchelon(null);
         setSalaryValue(0);
         setIndexValue(0);
-        showNotification("Formulaire réinitialisé", "success");
     };
 
     const handleSave = async () => {
@@ -217,7 +216,7 @@ const GestionIndemnitee = () => {
             };
             
             await api.post('/api/gestionEtat/gestionindemnites', payload);
-            showNotification(`✨ Indemnité "${form.libelle}" ajoutée avec succès!`, "success");
+            showNotification(` Indemnité "${form.libelle}" ajoutée avec succès!`, "success");
             resetForm();
             
         } catch (err) { 
@@ -265,10 +264,10 @@ const GestionIndemnitee = () => {
 
     return (
         <div className={`min-h-screen transition-all duration-300 ${bgClass}`}>
-            <div className="container p-4 ">
+            <div className="container p-2 ">
                 
                 {/* Header */}
-                <div className={`${cardClass} rounded-2xl shadow-xl border ${borderClass} p-4 mb-6  top-0 z-30 backdrop-blur-xl bg-opacity-80 dark:bg-opacity-80`}>
+                <div className={`${cardClass} rounded-2xl shadow-xl border ${borderClass} p-4 mb-4  top-0 z-30 backdrop-blur-xl bg-opacity-80 dark:bg-opacity-80`}>
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <button 
@@ -280,7 +279,6 @@ const GestionIndemnitee = () => {
                             </button>
                             <div>
                                 <h2 className={`font-bold text-xl md:text-2xl tracking-tight flex items-center gap-2 ${textClass}`}>
-                                    <Gift size={24} className="text-indigo-500" />
                                     Paramétrage des Indemnités
                                 </h2>
                                 <p className={`text-sm ${textMutedClass} mt-1`}>Configuration des primes et indemnités par hiérarchie</p>
@@ -327,14 +325,13 @@ const GestionIndemnitee = () => {
                     <div className={`${cardClass} rounded-2xl shadow-xl border ${borderClass} overflow-hidden`}>
                         <div className={`${cardHeaderClass} px-6 py-4`}>
                             <h3 className="flex items-center gap-2 font-bold text-white text-sm uppercase tracking-wider">
-                                
                                 Nouvelle Indemnité - {selectedYear}
                             </h3>
                         </div>
                         
                         <div className="p-6 space-y-5">
                             <div>
-                                <label className={`text-xs font-bold ${textMutedClass} mb-1.5 block uppercase tracking-wider`}>Libellé *</label>
+                                <label className={`text-xs font-bold ${textMutedClass} mb-1.5 block uppercase tracking-wider`}>Libellé </label>
                                 <input 
                                     placeholder="ex: Prime de transport, Indemnité de logement..."
                                     className={`w-full p-3 rounded-xl outline-none transition-all ${inputClass} border ${borderClass}`}
@@ -398,7 +395,7 @@ const GestionIndemnitee = () => {
                                 <div className="space-y-4 animate-fadeIn">
                                     <div>
                                         <label className={`text-xs font-bold ${textMutedClass} mb-1.5 block flex items-center gap-1 uppercase tracking-wider`}>
-                                            <Users size={12}/> Post *
+                                            <Users size={12}/> Post 
                                         </label>
                                         <select 
                                             className={`w-full p-3 rounded-xl outline-none transition-all ${selectClass} border ${borderClass} ${textClass}`}
@@ -490,7 +487,7 @@ const GestionIndemnitee = () => {
                                 <button 
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className=" cursor-pointer flex-1 bg-blue-600hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className=" cursor-pointer flex-1 bg-blue-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     {loading ? <Loader2 size={18} className="animate-spin"/> : <Plus size={18} />}
                                     {loading ? "Enregistrement..." : "Enregistrer l'indemnité"}

@@ -1,5 +1,4 @@
 <?php
-// database/migrations/xxxx_xx_xx_xxxxxx_create_employee_credits_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -21,7 +20,6 @@ return new class extends Migration
             $table->decimal('credit_mensualite', 15, 2)->nullable();
             $table->decimal('credit_reste_a_payer', 15, 2)->nullable();
             $table->string('statut')->default('ACTIF');
-            $table->text('description')->nullable();
             $table->timestamps();
             
             $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');

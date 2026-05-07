@@ -39,7 +39,7 @@ const GestionRCAR = () => {
   // Dark mode classes
   const bgClass = darkMode ? 'bg-[#0D0D0D]' : 'bg-[#F8FAFC]';
   const cardClass = darkMode ? 'bg-[#1A1A1A] border-[#2A2A2A]' : 'bg-white border-gray-200';
-  const cardHeaderClass = darkMode ? 'bg-gradient-to-r from-indigo-700 to-indigo-600' : 'bg-gradient-to-r from-indigo-500 to-indigo-400';
+  const cardHeaderClass = darkMode ? 'bg-gradient-to-r from-indigo-700 to-indigo-600' : 'bg-gradient-to-r from-indigo-700 to-indigo-600';
   const textClass = darkMode ? 'text-gray-100' : 'text-gray-800';
   const textMutedClass = darkMode ? 'text-gray-500' : 'text-gray-500';
   const borderClass = darkMode ? 'border-[#2A2A2A]' : 'border-gray-200';
@@ -51,9 +51,9 @@ const GestionRCAR = () => {
     ? 'bg-[#252525] border-[#333] text-white' 
     : 'bg-gray-50 border-gray-200 text-gray-800';
   
-  const buttonClass = "px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 cursor-pointer";
-  const primaryButtonClass = `${buttonClass} bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-indigo-700 shadow-md`;
-  const successButtonClass = `${buttonClass} bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-md`;
+  const buttonClass = "px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 cursor-pointer";
+  const primaryButtonClass = `${buttonClass} bg-blue-600 text-white hover:from-indigo-600 hover:to-indigo-700 shadow-md`;
+  const successButtonClass = `${buttonClass} bg-blue-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-md`;
   const dangerButtonClass = `${buttonClass} bg-gradient-to-r from-rose-500 to-rose-600 text-white hover:from-rose-600 hover:to-rose-700 shadow-md`;
   const outlineButtonClass = `${buttonClass} border ${borderClass} ${textClass} hover:bg-gray-100 dark:hover:bg-[#252525] cursor-pointer`;
 
@@ -412,7 +412,7 @@ const GestionRCAR = () => {
       <div className="max-w-7xl mx-auto">
         
         {/* HEADER avec bouton retour */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="flex items-center gap-4">
             <button 
               onClick={handleGoBack}
@@ -461,14 +461,15 @@ const GestionRCAR = () => {
                 </div>
               )}
             </div>
+            <button onClick={addType} className={`${successButtonClass} cursor-pointer`}>
+              <Plus size={16} /> Nouveau Type
+            </button>
 
             <button onClick={exportToPDF} className={`${dangerButtonClass} cursor-pointer`}>
               <Download size={16} /> Exporter PDF
             </button>
             
-            <button onClick={addType} className={`${successButtonClass} cursor-pointer`}>
-              <Plus size={16} /> Nouveau Type
-            </button>
+
             
             {fetching && <Loader2 className="animate-spin text-indigo-500" size={20} />}
           </div>

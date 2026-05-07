@@ -115,7 +115,7 @@ class EmployeeController extends Controller
                 'nombre_enfants' => 'nullable|integer|min:0|max:20',
                 'departement' => 'nullable|string',
                 'date_embauche' => 'nullable|date',
-                'poste' => 'nullable|string',
+
                 'type_contrat' => 'nullable|string',
                 'annee_id' => 'required|exists:salary_years,id',
                 'Post_id' => 'nullable|exists:Post,id',
@@ -237,7 +237,7 @@ class EmployeeController extends Controller
                 'nombre_enfants' => 'nullable|integer|min:0|max:20',
                 'departement' => 'nullable|string|max:100',
                 'date_embauche' => 'nullable|date',
-                'poste' => 'nullable|string|max:255',
+                
                 'type_contrat' => 'nullable|string|max:50',
                 'annee_id' => 'sometimes|exists:salary_years,id',
                 'Post_id' => 'nullable|exists:Post,id',

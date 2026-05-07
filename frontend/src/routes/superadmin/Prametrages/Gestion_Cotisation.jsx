@@ -97,8 +97,8 @@ const GestionCotisation = () => {
   const addOrganisme = () => {
     const newId = Date.now();
     const newOrg = { id: newId, name: 'Nouvel Organisme', rubriques: [] };
-    setConfig({ ...config, organismes: [...config.organismes, newOrg] });
-    setUiStates(prev => ({ ...prev, [newId]: { visible: true, favorite: false } }));
+    setConfig({ ...config, organismes: [newOrg, ...config.organismes] });
+    setUiStates(prev => ({ [newId]: { visible: true, favorite: false }, ...prev }));
     showNotification("✨ Nouvel organisme ajouté", "success");
   };
 
@@ -295,14 +295,16 @@ const GestionCotisation = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${bgClass}`}>
+    <div className={`p-2 min-h-screen transition-colors duration-300 ${bgClass}`}>
+        
       <div className="max-w-7xl mx-auto pb-32">
         
         {/* HEADER */}
         <div className={`${cardClass} rounded-2xl border ${borderClass} p-4 mb-6 shadow-sm`}>
+            
           <div className="flex flex-wrap items-center justify-between gap-4">
-
             <div className="flex items-center gap-4">
+                
                 <button 
                     onClick={() => navigate(-1)}
                     className={`cursor-pointer p-2 rounded-xl transition-all ${darkMode ? 'bg-[#1A1A1A] border-[#2A2A2A] hover:bg-[#252525]' : 'bg-white border-gray-200 hover:bg-gray-50'} border shadow-sm`}
@@ -335,12 +337,13 @@ const GestionCotisation = () => {
                     </div>
                 )}
                 </div>
-              <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-bold text-xs hover:from-red-700 hover:to-rose-700 transition-all shadow-lg cursor-pointer">
+                <button onClick={addOrganisme} className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg cursor-pointer">
+                    <Plus size={16} /> Nouveau Type
+                </button>
+              <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-bold text-xs hover:from-red-700 hover:to-rose-700 transition-all shadow-lg cursor-pointer">
                 <Download size={16} /> Exporter PDF
               </button>
-              <button onClick={addOrganisme} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-xs hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg cursor-pointer">
-                <Plus size={16} /> Nouveau Type
-              </button>
+
             </div>
             {fetching && <Loader2 className="animate-spin text-indigo-500" size={20} />}
           </div>
@@ -353,7 +356,7 @@ const GestionCotisation = () => {
               {/* Card Header */}
               <div className={`px-5 py-3 border-b ${borderClass} flex justify-between items-center ${darkMode ? 'bg-[#252525]' : 'bg-gray-50/50'}`}>
                 <div className="flex items-center gap-3">
-                  <div className="bg-blue-600p-2 rounded-lg text-white shadow-md">
+                  <div className="bg-blue-600 p-2 rounded-lg text-white shadow-md">
                     <Building2 size={16} />
                   </div>
                   <input 
@@ -382,8 +385,13 @@ const GestionCotisation = () => {
 
               {/* Card Content */}
               {uiStates[org.id]?.visible && (
+                
                 <div className="p-5">
+                 <button onClick={() => addRubrique(org.id)} className="mb-4 text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline transition-all cursor-pointer">
+                    <Plus size={12} /> Ajouter une Cotisation
+                  </button>
                   <div className="overflow-x-auto">
+                    
                     <table className="w-full">
                       <thead>
                         <tr className={`text-left text-xs font-bold uppercase tracking-wider ${textMutedClass}`}>
@@ -446,9 +454,7 @@ const GestionCotisation = () => {
                       </tbody>
                     </table>
                   </div>
-                  <button onClick={() => addRubrique(org.id)} className="mt-4 text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline transition-all cursor-pointer">
-                    <Plus size={12} /> Ajouter une ligne
-                  </button>
+
                 </div>
               )}
             </div>
@@ -466,16 +472,16 @@ const GestionCotisation = () => {
           </div>
         )}
 
-        {fetching && (
+        {/* {fetching && (
           <div className="text-center py-12">
             <Loader2 className="animate-spin mx-auto text-indigo-500" size={32} />
             <p className={`mt-2 ${textMutedClass}`}>Chargement...</p>
           </div>
-        )}
+        )} */}
 
         {/* Save Button */}
         <div className="fixed bottom-6 right-6 z-50">
-          <button onClick={handleSave} disabled={loading} className="flex items-center gap-2 px-6 py-3 bg-blue-600text-white rounded-xl font-bold shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 cursor-pointer">
+          <button onClick={handleSave} disabled={loading} className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 cursor-pointer">
             {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
             <span className="text-sm uppercase tracking-wide">Sauvegarder</span>
           </button>

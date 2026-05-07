@@ -18,7 +18,6 @@ export default function Sidebar({ onLinkClick, isMobile }) {
         { label: "Cotisation", icon: <PiggyBank size={20} />, path: "/SuperAdmin/Cotisation" },
         { label: "RCAR", icon: <ShieldCheck size={20} />, path: "/SuperAdmin/RCAR" },
         { label: "IR", icon: <Percent size={20} />, path: "/SuperAdmin/IRAffichage" },
-        { label: "Crédit", icon: <HandCoins size={20} />, path: "/SuperAdmin/Credit" },
         { label: "Retraite & Tamdid", icon: <GraduationCap size={20} />, path: "/SuperAdmin/Retraite" },
         { label: "Assurances", icon: <Hospital size={20} />, path: "/SuperAdmin/assurances" },
         { label: "SNTL", icon: <Truck size={20} />, path: "/SuperAdmin/SNTL" },

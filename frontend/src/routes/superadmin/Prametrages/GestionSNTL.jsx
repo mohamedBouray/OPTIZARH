@@ -436,7 +436,7 @@ const GestionSNTL = () => {
               
               <button 
                 onClick={addSntlConfig}
-                className="bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-md uppercase cursor-pointer"
+                className="bg-blue-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-md uppercase cursor-pointer"
               >
                 <Plus size={16} /> Nouveau Paramètre
               </button>

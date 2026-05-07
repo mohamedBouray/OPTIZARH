@@ -28,14 +28,13 @@ const GestionRetraite = () => {
     nb_fois: 2
   });
 
-  // Dark mode classes - RH simple design
+
   const bgClass = darkMode ? 'bg-[#0D0D0D]' : 'bg-[#F8FAFC]';
   const cardClass = darkMode ? 'bg-[#1A1A1A] border-[#2A2A2A]' : 'bg-white border-gray-200';
   const textClass = darkMode ? 'text-gray-100' : 'text-gray-800';
   const textMutedClass = darkMode ? 'text-gray-500' : 'text-gray-500';
   const borderClass = darkMode ? 'border-[#2A2A2A]' : 'border-gray-200';
   
-  // Input de type TEXT au lieu de NUMBER pour pouvoir supprimer le zéro
   const inputNumberClass = darkMode 
     ? 'w-full bg-[#252525] border border-[#333] rounded-xl px-6 py-4 text-3xl font-bold text-center text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
     : 'w-full bg-gray-50 border border-gray-200 rounded-xl px-6 py-4 text-3xl font-bold text-center text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
@@ -189,7 +188,7 @@ const GestionRetraite = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 p-6 ${bgClass}`}>
+    <div className={`min-h-screen transition-colors duration-300 p-3 ${bgClass}`}>
       <div className="max-w-5xl mx-auto">
         
         {/* HEADER avec bouton retour */}

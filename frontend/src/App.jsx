@@ -37,12 +37,9 @@ import Indemente from "./routes/superadmin/AffichageIndementes";
 import Cotisation from "./routes/superadmin/Cotisation";
 import RCAR from "./routes/superadmin/RCAR";
 import IRAffichage from "./routes/superadmin/IRAffichage";
-import Credit from "./routes/superadmin/Credit";
 import Retraite from "./routes/superadmin/Retraite";
 import SNTL from './routes/superadmin/SNTL';
 import AssuranceManagement from './routes/superadmin/AssuranceManagement';
-
-
 import Logs from "./routes/superadmin/Logs";
 import Parametres from './routes/superadmin/Parametres'
 
@@ -186,7 +183,6 @@ function AppContent() {
                             <Route path="Cotisation" element={<Cotisation/>} />
                             <Route path="RCAR" element={<RCAR/>} />
                             <Route path="IRAffichage" element={<IRAffichage/>}/>
-                            <Route path="Credit" element={<Credit />} />
                             <Route path="Retraite" element={<Retraite/>} />
                             <Route path="SNTL" element={<SNTL/>} />
                             <Route path="assurances" element={<AssuranceManagement />} />

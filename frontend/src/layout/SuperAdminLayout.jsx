@@ -22,7 +22,7 @@ export default function Layout() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // Empêcher le scroll du body quand la sidebar est ouverte sur mobile
+
     useEffect(() => {
         if (isMobile && sidebarOpen) {
             document.body.style.overflow = 'hidden';
@@ -78,7 +78,7 @@ export default function Layout() {
 
                 {/* Content - 3ème partie (scrollable) */}
                 <main className="pt-14 min-h-screen">
-                    <div className="p-4 md:p-6">
+                    <div className="p-3 md:p-5">
                         <Outlet />
                     </div>
                 </main>

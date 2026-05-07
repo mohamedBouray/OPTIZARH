@@ -1,5 +1,4 @@
 <?php
-// app/Models/SuperAdmin/EmployeeCredit.php
 
 namespace App\Models\SuperAdmin;
 
@@ -13,7 +12,7 @@ class EmployeeCredit extends Model
     protected $fillable = [
         'employee_id', 'credit_type_id', 'montant_credit', 'taux_credit',
         'credit_duree', 'credit_date_debut', 'credit_date_fin',
-        'credit_mensualite', 'credit_reste_a_payer', 'statut', 'description'
+        'credit_mensualite', 'credit_reste_a_payer', 'statut',
     ];
     
     protected $casts = [
@@ -26,7 +25,6 @@ class EmployeeCredit extends Model
         'credit_date_fin' => 'date',
     ];
     
-    // Accesseur pour vérifier si le crédit est actif
     public function getIsActifAttribute()
     {
         if (!$this->credit_date_debut || !$this->credit_date_fin) {
@@ -37,7 +35,6 @@ class EmployeeCredit extends Model
         return $this->statut === 'ACTIF' && $today->between($this->credit_date_debut, $this->credit_date_fin);
     }
     
-    // Accesseur pour le pourcentage remboursé
     public function getPourcentageRembourseAttribute()
     {
         if (!$this->montant_credit || !$this->credit_reste_a_payer || $this->montant_credit <= 0) {
@@ -48,13 +45,11 @@ class EmployeeCredit extends Model
         return round(($rembourse / $this->montant_credit) * 100, 2);
     }
     
-    // Relation inverse avec Employee
     public function employee()
     {
         return $this->belongsTo(Employee::class, 'employee_id');
     }
     
-    // Relation avec CreditType
     public function creditType()
     {
         return $this->belongsTo(CreditType::class, 'credit_type_id');

@@ -3,136 +3,180 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SuperAdmin\Employee;
-use App\Models\SuperAdmin\Credit;
-use App\Models\SuperAdmin\CreditCategory;
+use App\Models\SuperAdmin\EmployeeCredit;
 use App\Models\SuperAdmin\SalaryYear;
 use App\Models\SuperAdmin\Assurance;
 use App\Models\SuperAdmin\SntlSetting;
 use App\Models\SuperAdmin\RcarType;
 use App\Models\SuperAdmin\RcarDetail;
-use App\Models\SuperAdmin\Organisme;
 use App\Models\SuperAdmin\Cotisation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class DashboardController extends Controller{
-    public function getStats(Request $request){
+class DashboardController extends Controller
+{
+    /**
+     * Calculer les indemnités pour un employé
+     */
+    private function calculerIndemnitesPourEmploye($employee, $yearId)
+    {
+        $totalIndemnites = 0;
+        
+        try {
+            $indemnites = DB::table('gestion_indemnites')
+                ->where('salary_year_id', $yearId)
+                ->get();
+            
+            foreach ($indemnites as $ind) {
+                $applicable = false;
+                
+                if ($ind->is_for_all) {
+                    $applicable = true;
+                } else {
+                    if ($ind->Post_id && $ind->Post_id != $employee->Post_id) continue;
+                    if ($ind->grade_id && $ind->grade_id != $employee->grade_id) continue;
+                    if ($ind->echelle_id && $ind->echelle_id != $employee->echelle_id) continue;
+                    if ($ind->echelon_id && $ind->echelon_id != $employee->echelon_id) continue;
+                    $applicable = true;
+                }
+                
+                if ($applicable) {
+                    if ($ind->type === 'Fixe') {
+                        $totalIndemnites += $ind->valeur;
+                    } else {
+                        $totalIndemnites += ($employee->salaire * $ind->valeur / 100);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Erreur calcul indemnités: ' . $e->getMessage());
+        }
+        
+        return $totalIndemnites;
+    }
+
+    public function getStats(Request $request)
+    {
         try {
             $annee = $request->query('year', date('Y'));
             
-            // Récupérer l'ID de l'année
             $yearObj = SalaryYear::where('year', $annee)->first();
             $yearId = $yearObj ? $yearObj->id : null;
             
             // ==================== EMPLOYÉS ====================
-            $totalEmployees = Employee::count();
-            $activeEmployees = Employee::where('statut', 'ACTIF')->count();
-            $congeEmployees = Employee::where('statut', 'CONGÉ')->count();
-            $departEmployees = Employee::where('statut', 'DÉPART')->count();
+            $employees = Employee::all();
+            $totalEmployees = $employees->count();
+            $activeEmployees = 0;
+            $congeEmployees = 0;
+            $departEmployees = 0;
+            $totalSalaireBrut = 0;
             
-            // ==================== SALAIRES ====================
-            $totalSalaireBrut = Employee::sum('salaire') ?: 0;
+            $salaryByGradeTemp = [];
+            
+            foreach ($employees as $emp) {
+                if ($emp->statut === 'ACTIF') $activeEmployees++;
+                elseif ($emp->statut === 'CONGE') $congeEmployees++;
+                elseif ($emp->statut === 'DEPART') $departEmployees++;
+                
+                $indemnitesTotal = $this->calculerIndemnitesPourEmploye($emp, $yearId);
+                $salaireBrut = ($emp->salaire ?? 0) + $indemnitesTotal;
+                $totalSalaireBrut += $salaireBrut;
+                
+                $gradeName = $emp->grade ?? 'Non spécifié';
+                if (!isset($salaryByGradeTemp[$gradeName])) {
+                    $salaryByGradeTemp[$gradeName] = 0;
+                }
+                $salaryByGradeTemp[$gradeName] += $salaireBrut;
+            }
+            
+            $salaryByGrade = [];
+            foreach ($salaryByGradeTemp as $name => $total) {
+                $salaryByGrade[] = ['name' => $name, 'total' => round($total, 2)];
+            }
+            usort($salaryByGrade, fn($a, $b) => $b['total'] <=> $a['total']);
+            $salaryByGrade = array_slice($salaryByGrade, 0, 8);
             
             // ==================== CRÉDITS ====================
-            $totalCredits = Credit::count();
-            $activeCredits = Credit::where('status', 'Actif')->count();
-            $totalCreditAmount = Credit::sum('max_amount') ?: 0;
+            $totalCredits = EmployeeCredit::count();
+            $activeCredits = EmployeeCredit::where('statut', 'ACTIF')->count();
+            $totalCreditAmount = EmployeeCredit::sum('montant_credit') ?: 0;
+            $totalCreditsMensualites = EmployeeCredit::where('statut', 'ACTIF')->sum('credit_mensualite') ?: 0;
             
-            // Crédits par catégorie
-            $creditsByCategory = Credit::select('category_id', DB::raw('count(*) as total'))
-                ->whereNotNull('category_id')
-                ->where('year', $annee)
-                ->groupBy('category_id')
-                ->get()
-                ->map(function($item) {
-                    $category = CreditCategory::find($item->category_id);
-                    return [
-                        'name' => $category ? $category->name : 'N/A',
-                        'total' => $item->total
-                    ];
-                });
-            
-            // Crédits par année
-            $creditsByYear = Credit::select('year', DB::raw('count(*) as total'))
-                ->whereNotNull('year')
-                ->groupBy('year')
-                ->orderBy('year', 'desc')
-                ->get()
-                ->map(function($item) {
-                    return [
-                        'year' => (string)$item->year,
-                        'total' => $item->total
-                    ];
-                });
+            $creditsByYear = EmployeeCredit::select(
+                DB::raw('YEAR(created_at) as year'), 
+                DB::raw('count(*) as total')
+            )
+            ->whereNotNull('created_at')
+            ->groupBy('year')
+            ->orderBy('year', 'desc')
+            ->get()
+            ->map(fn($item) => ['year' => (string)$item->year, 'total' => $item->total]);
             
             // ==================== COTISATIONS ====================
-            $cotisationsDetails = [];
             $totalCotisations = 0;
+            $cotisationsDetails = [];
             
-            $organismes = Organisme::where('annee', $annee)->get();
-            
-            if ($organismes->isNotEmpty()) {
-                foreach ($organismes as $org) {
-                    $cotisations = Cotisation::where('organisme_id', $org->id)->get();
-                    $orgTotal = 0;
-                    $orgTaux = 0;
-                    
-                    foreach ($cotisations as $cot) {
-                        $montant = ($totalSalaireBrut * ($cot->taux / 100));
-                        $orgTotal += $montant;
-                        $orgTaux += $cot->taux;
-                    }
-                    
-                    $totalCotisations += $orgTotal;
+            if ($totalSalaireBrut > 0) {
+                $cotisations = Cotisation::all();
+                foreach ($cotisations as $cot) {
+                    $montant = ($totalSalaireBrut * ($cot->taux / 100));
+                    $totalCotisations += $montant;
                     $cotisationsDetails[] = [
-                        'name' => $org->nom,
-                        'total' => round($orgTotal, 2),
-                        'taux' => round($orgTaux, 2)
+                        'name' => $cot->name ?? 'Cotisation',
+                        'total' => round($montant, 2)
                     ];
                 }
             }
             
             // ==================== RCAR ====================
             $totalRCAR = 0;
-            $rcarDetails = [];
-            
             if ($yearId) {
                 $rcarTypes = RcarType::where('salary_year_id', $yearId)->get();
-                
                 foreach ($rcarTypes as $rcarType) {
                     $details = RcarDetail::where('rcar_type_id', $rcarType->id)->get();
                     foreach ($details as $detail) {
-                        $montant = ($totalSalaireBrut * ($detail->percentage / 100));
-                        if ($detail->type === 'salariale') {
-                            $totalRCAR += $montant;
+                        $baseCalcul = $totalSalaireBrut;
+                        if ($detail->plafond && $detail->plafond > 0) {
+                            $baseCalcul = min($totalSalaireBrut, $detail->plafond);
                         }
-                        $rcarDetails[] = [
-                            'designation' => $detail->designation,
-                            'type' => $detail->type ?? 'salariale',
-                            'taux' => $detail->percentage,
-                            'plafond' => $detail->plafond,
-                            'montant' => round($montant, 2)
-                        ];
+                        $totalRCAR += ($baseCalcul * ($detail->percentage / 100));
                     }
+                }
+            }
+            
+            // ==================== IR (estimé) ====================
+            $totalIR = 0;
+            foreach ($employees as $emp) {
+                $salaireBrut = ($emp->salaire ?? 0) + $this->calculerIndemnitesPourEmploye($emp, $yearId);
+                if ($salaireBrut > 10000) {
+                    $totalIR += $salaireBrut * 0.35;
+                } elseif ($salaireBrut > 6000) {
+                    $totalIR += $salaireBrut * 0.25;
+                } elseif ($salaireBrut > 3000) {
+                    $totalIR += $salaireBrut * 0.15;
+                } else {
+                    $totalIR += $salaireBrut * 0.05;
                 }
             }
             
             // ==================== ASSURANCES ====================
             $totalAssurances = 0;
-            
             if ($yearId) {
                 $assurances = Assurance::where('annee_id', $yearId)->get();
                 foreach ($assurances as $assurance) {
                     if ($assurance->taux_employeur > 0) {
-                        $totalAssurances += ($totalSalaireBrut * ($assurance->taux_employeur / 100));
+                        $baseCalcul = $totalSalaireBrut;
+                        if ($assurance->plafond_mensuel && $assurance->plafond_mensuel > 0) {
+                            $baseCalcul = min($totalSalaireBrut, $assurance->plafond_mensuel);
+                        }
+                        $totalAssurances += ($baseCalcul * ($assurance->taux_employeur / 100));
                     }
                 }
             }
             
             // ==================== SNTL ====================
             $totalSNTL = 0;
-            
             if ($yearId) {
                 $sntlConfigs = SntlSetting::where('salary_year_id', $yearId)->get();
                 foreach ($sntlConfigs as $sntl) {
@@ -144,81 +188,32 @@ class DashboardController extends Controller{
                 }
             }
             
-            // ==================== ÉVOLUTION MENSUELLE ====================
-            $monthlyEvolution = [];
+            // ==================== TOTAUX ====================
+            $totalDeductionsSalarie = $totalCotisations + $totalRCAR + $totalCreditsMensualites + $totalIR;
+            $totalChargesPatronales = $totalAssurances + $totalSNTL;
+            
+            // ==================== ÉVOLUTION DES CHARGES (POUR OPTION 2 - garder pour les stats) ====================
             $months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-            $baseSalary = $totalSalaireBrut / 12;
-            $baseCotisation = $totalCotisations / 12;
+            $monthlyDummyData = [];
             
             for ($i = 0; $i < 12; $i++) {
-                $growth = 1 + (($i - 5) * 0.02);
-                $monthlyEvolution[] = [
+                $variation = 0.85 + ($i * 0.03);
+                $monthlyDummyData[] = [
                     'name' => $months[$i],
-                    'salaires' => round($baseSalary * $growth, 2),
-                    'cotisations' => round($baseCotisation * $growth, 2)
+                    'cotisations' => 0,
+                    'rcar' => 0
                 ];
             }
             
-            // ==================== STATUTS EMPLOYÉS ====================
+            // ==================== STATUTS ====================
             $employeeStatus = [
                 ['name' => 'Actifs', 'value' => $activeEmployees, 'color' => '#10b981'],
                 ['name' => 'Congé', 'value' => $congeEmployees, 'color' => '#f59e0b'],
                 ['name' => 'Départ', 'value' => $departEmployees, 'color' => '#ef4444']
             ];
             
-            // ==================== SALAIRE PAR GRADE ====================
-            $salaryByGrade = [];
-            
-            if ($yearId) {
-                $salaryByGrade = DB::table('employees as e')
-                    ->join('grades as g', 'e.grade_id', '=', 'g.id')
-                    ->select('g.name as name', DB::raw('SUM(e.salaire) as total'))
-                    ->where('e.annee_id', $yearId)
-                    ->where('e.salaire', '>', 0)
-                    ->whereNotNull('e.grade_id')
-                    ->groupBy('g.id', 'g.name')
-                    ->orderBy('total', 'desc')
-                    ->get()
-                    ->map(function($item) {
-                        return [
-                            'name' => $item->name,
-                            'total' => round($item->total, 2)
-                        ];
-                    });
-                
-                if ($salaryByGrade->isEmpty()) {
-                    $salaryByGrade = Employee::select('grade', DB::raw('SUM(salaire) as total'))
-                        ->whereNotNull('grade')
-                        ->where('grade', '!=', '')
-                        ->where('salaire', '>', 0)
-                        ->where('annee_id', $yearId)
-                        ->groupBy('grade')
-                        ->orderBy('total', 'desc')
-                        ->get()
-                        ->map(function($item) {
-                            return [
-                                'name' => $item->grade ?: 'Non spécifié',
-                                'total' => round($item->total, 2)
-                            ];
-                        });
-                }
-            }
-            
-            // ==================== ANNÉES DISPONIBLES (CORRIGÉ) ====================
-            // Afficher uniquement les années qui ont des crédits
-            $availableYears = Credit::select('year')
-                ->whereNotNull('year')
-                ->distinct()
-                ->orderBy('year', 'desc')
-                ->pluck('year')
-                ->toArray();
-            
-            // Si aucune année avec crédits, prendre les années de salary_years
-            if (empty($availableYears)) {
-                $availableYears = SalaryYear::orderBy('year', 'desc')->pluck('year')->toArray();
-            }
-            
-            // Si toujours vide, mettre des valeurs par défaut
+            // ==================== ANNÉES DISPONIBLES ====================
+            $availableYears = SalaryYear::orderBy('year', 'desc')->pluck('year')->toArray();
             if (empty($availableYears)) {
                 $availableYears = [date('Y'), date('Y')-1, date('Y')-2];
             }
@@ -237,56 +232,55 @@ class DashboardController extends Controller{
                     'total_rcar' => round($totalRCAR, 2),
                     'total_assurances' => round($totalAssurances, 2),
                     'total_sntl' => round($totalSNTL, 2),
-                    'total_charges' => round($totalCotisations + $totalRCAR + $totalAssurances + $totalSNTL, 2)
+                    'total_charges_patronales' => round($totalChargesPatronales, 2),
+                    'total_deductions_salarie' => round($totalDeductionsSalarie, 2),
+                    'total_credits_mensualites' => round($totalCreditsMensualites, 2),
+                    'total_ir' => round($totalIR, 2),
                 ],
                 'charts' => [
-                    'credits_by_category' => $creditsByCategory,
                     'credits_by_year' => $creditsByYear,
                     'salary_by_grade' => $salaryByGrade,
-                    'monthly_evolution' => $monthlyEvolution,
+                    'monthly_evolution' => $monthlyDummyData,
                     'employee_status' => $employeeStatus,
-                    'cotisations_details' => $cotisationsDetails,
-                    'rcar_details' => $rcarDetails
+                    'cotisations_details' => $cotisationsDetails
                 ],
                 'current_year' => (int)$annee,
                 'available_years' => $availableYears
             ]);
             
         } catch (\Exception $e) {
-            Log::error("Dashboard Error: " . $e->getMessage());
-            Log::error($e->getTraceAsString());
+            Log::error('Dashboard Error: ' . $e->getMessage());
+            Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
             
             return response()->json([
+                'error' => $e->getMessage(),
                 'stats' => [
                     'total_employees' => Employee::count(),
                     'active_employees' => Employee::where('statut', 'ACTIF')->count(),
                     'conge_employees' => 0,
                     'depart_employees' => 0,
                     'total_salary' => Employee::sum('salaire') ?: 0,
-                    'total_credits' => Credit::count(),
-                    'active_credits' => Credit::where('status', 'Actif')->count(),
-                    'total_credit_amount' => Credit::sum('max_amount') ?: 0,
+                    'total_credits' => 0,
+                    'active_credits' => 0,
+                    'total_credit_amount' => 0,
                     'total_cotisations' => 0,
                     'total_rcar' => 0,
                     'total_assurances' => 0,
                     'total_sntl' => 0,
-                    'total_charges' => 0
+                    'total_charges_patronales' => 0,
+                    'total_deductions_salarie' => 0,
+                    'total_credits_mensualites' => 0,
+                    'total_ir' => 0,
                 ],
                 'charts' => [
-                    'credits_by_category' => [],
                     'credits_by_year' => [],
                     'salary_by_grade' => [],
                     'monthly_evolution' => [],
-                    'employee_status' => [
-                        ['name' => 'Actifs', 'value' => Employee::where('statut', 'ACTIF')->count(), 'color' => '#10b981'],
-                        ['name' => 'Congé', 'value' => 0, 'color' => '#f59e0b'],
-                        ['name' => 'Départ', 'value' => 0, 'color' => '#ef4444']
-                    ],
-                    'cotisations_details' => [],
-                    'rcar_details' => []
+                    'employee_status' => [],
+                    'cotisations_details' => []
                 ],
                 'current_year' => (int)$annee,
-                'available_years' => [date('Y'), date('Y')-1, date('Y')-2]
+                'available_years' => [date('Y')]
             ]);
         }
     }

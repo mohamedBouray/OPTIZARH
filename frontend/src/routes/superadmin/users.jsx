@@ -61,6 +61,10 @@ export default function EmployeeManagement() {
     
     const [indemnitesList, setIndemnitesList] = useState([]);
     const [irSettings, setIrSettings] = useState([]);
+
+    const [retraiteSettings, setRetraiteSettings] = useState(null);
+    const [isRcarDisabled, setIsRcarDisabled] = useState(false);
+    const [ageMessage, setAgeMessage] = useState('');   
     
     const [employeeCredits, setEmployeeCredits] = useState([]);
     const [showCreditForm, setShowCreditForm] = useState(false);
@@ -107,6 +111,48 @@ export default function EmployeeManagement() {
     // ============================================================
     // FONCTIONS API
     // ============================================================
+    const fetchRetraiteSettings = async () => {
+    if (!selectedAnnee) return;
+        try {
+            const res = await axiosClient.get(`/api/retraite/settings/${selectedAnnee}`);
+            setRetraiteSettings(res.data);
+        } catch (err) {
+            console.error("Erreur chargement retraite settings:", err);
+            setRetraiteSettings(null);
+        }
+    };
+
+    useEffect(() => {
+    if (selectedAnnee) {
+        fetchRetraiteSettings();
+    }
+}, [selectedAnnee]);
+
+const verifierAgeRetraite = (dateNaissance) => {
+    if (!dateNaissance || !retraiteSettings) {
+        setIsRcarDisabled(false);
+        setAgeMessage('');
+        return;
+    }
+    
+    const aujourdhui = new Date();
+    const dateNaiss = new Date(dateNaissance);
+    let age = aujourdhui.getFullYear() - dateNaiss.getFullYear();
+    const m = aujourdhui.getMonth() - dateNaiss.getMonth();
+    if (m < 0 || (m === 0 && aujourdhui.getDate() < dateNaiss.getDate())) {
+        age--;
+    }
+    
+    const ageLegal = parseInt(retraiteSettings.age_legal) || 60;
+    
+    if (age >= ageLegal) {
+        setIsRcarDisabled(true);
+        setAgeMessage(`⚠️ L'employé a ${age} ans (≥ ${ageLegal} ans). RCAR désactivé car age de retraite atteint.`);
+    } else {
+        setIsRcarDisabled(false);
+        setAgeMessage(`✓ Âge: ${age} ans (retraite à ${ageLegal} ans)`);
+    }
+};
 
     const fetchIndemnites = async () => {
         if (!selectedAnneeId) return;
@@ -275,51 +321,99 @@ export default function EmployeeManagement() {
         return { total, appliedIndemnites };
     };
       
+    // const calculateAllCotisations = (brutSalary, organismeId, cotisationsList) => {
+    //     let totalCotisations = 0;
+    //     const appliedCotisations = [];
+
+    //     if (!cotisationsList || cotisationsList.length === 0) {
+    //         return { total: 0, details: [] };
+    //     }
+
+    //     let selectedOrganisme = null;
+    //     if (organismeId) {
+    //         selectedOrganisme = cotisationsList.find(c => c.id === parseInt(organismeId));
+    //     }
+        
+    //     if (!selectedOrganisme && cotisationsList.length > 0) {
+    //         selectedOrganisme = cotisationsList[0];
+    //     }
+        
+    //     if (!selectedOrganisme || !selectedOrganisme.rubriques || selectedOrganisme.rubriques.length === 0) {
+    //         return { total: 0, details: [] };
+    //     }
+        
+    //     selectedOrganisme.rubriques.forEach(rubrique => {
+    //         const taux = rubrique.taux || 0;
+    //         const plafond = rubrique.plafond || 0;
+    //         let baseCalcul = brutSalary;
+
+    //         if (plafond > 0) {
+    //             baseCalcul = Math.min(brutSalary, plafond);
+    //         }
+            
+    //         const montant = (baseCalcul * taux) / 100;
+    //         totalCotisations += montant;
+            
+    //         appliedCotisations.push({
+    //             name: rubrique.label,
+    //             organisme: selectedOrganisme.name,
+    //             taux: taux,
+    //             plafond: plafond,
+    //             baseCalcul: baseCalcul,
+    //             montant: montant
+    //         });
+    //     });
+        
+    //     return { total: totalCotisations, details: appliedCotisations };
+    // };
+
     const calculateAllCotisations = (brutSalary, organismeId, cotisationsList) => {
-        let totalCotisations = 0;
-        const appliedCotisations = [];
+            let totalCotisations = 0;
+            const appliedCotisations = [];
 
-        if (!cotisationsList || cotisationsList.length === 0) {
-            return { total: 0, details: [] };
-        }
+            if (!cotisationsList || cotisationsList.length === 0) {
+                return { total: 0, details: [] };
+            }
 
-        let selectedOrganisme = null;
-        if (organismeId) {
-            selectedOrganisme = cotisationsList.find(c => c.id === parseInt(organismeId));
-        }
-        
-        if (!selectedOrganisme && cotisationsList.length > 0) {
-            selectedOrganisme = cotisationsList[0];
-        }
-        
-        if (!selectedOrganisme || !selectedOrganisme.rubriques || selectedOrganisme.rubriques.length === 0) {
-            return { total: 0, details: [] };
-        }
-        
-        selectedOrganisme.rubriques.forEach(rubrique => {
-            const taux = rubrique.taux || 0;
-            const plafond = rubrique.plafond || 0;
-            let baseCalcul = brutSalary;
-
-            if (plafond > 0) {
-                baseCalcul = Math.min(brutSalary, plafond);
+            let selectedOrganisme = null;
+            if (organismeId) {
+                selectedOrganisme = cotisationsList.find(c => c.id === parseInt(organismeId));
             }
             
-            const montant = (baseCalcul * taux) / 100;
-            totalCotisations += montant;
+            if (!selectedOrganisme && cotisationsList.length > 0) {
+                selectedOrganisme = cotisationsList[0];
+            }
             
-            appliedCotisations.push({
-                name: rubrique.label,
-                organisme: selectedOrganisme.name,
-                taux: taux,
-                plafond: plafond,
-                baseCalcul: baseCalcul,
-                montant: montant
+            if (!selectedOrganisme || !selectedOrganisme.rubriques) {
+                return { total: 0, details: [] };
+            }
+            
+            selectedOrganisme.rubriques.forEach(rubrique => {
+                const taux = rubrique.taux || 0;
+                const plafondMontant = rubrique.plafond || 0;
+                let montantCalcule = (brutSalary * taux) / 100;
+
+                let montantFinal = montantCalcule;
+                if (plafondMontant > 0) {
+                    montantFinal = Math.min(montantCalcule, plafondMontant);
+                }
+
+                totalCotisations += montantFinal;
+                
+                appliedCotisations.push({
+                    name: rubrique.label,
+                    organisme: selectedOrganisme.name,
+                    taux: taux,
+                    plafond: plafondMontant,
+                    baseCalcul: brutSalary,
+                    montant: montantFinal
+                });
             });
-        });
-        
-        return { total: totalCotisations, details: appliedCotisations };
+            
+            return { total: totalCotisations, details: appliedCotisations };
     };
+
+
 
     // const calculateIR = (salaireBrut, situationFamiliale, nombreEnfants) => {
     //     if (!irSettings.length) return 0;
@@ -369,7 +463,7 @@ export default function EmployeeManagement() {
     // };
 
     const calculateIR = (salaireBrut, situationFamiliale, nombreEnfants) => {
-        if (!irSettings || irSettings.length === 0) return 0;
+        if (!irSettings || irSettings.length === 0) return { ir: 0, taux: 0 };
 
         const trancheActuelle = irSettings.find(t => {
             const min = parseFloat(t.min);
@@ -377,10 +471,10 @@ export default function EmployeeManagement() {
             return salaireBrut >= min && salaireBrut <= max;
         });
 
-        if (!trancheActuelle) return 0;
+        if (!trancheActuelle) return { ir: 0, taux: 0 };
 
-        const taux = parseFloat(trancheActuelle.taux) / 100;
-        let irBrut = salaireBrut * taux;
+        const taux = parseFloat(trancheActuelle.taux);
+        let irBrut = salaireBrut * (taux / 100);
 
         let deductionTotale = 0;
 
@@ -397,7 +491,10 @@ export default function EmployeeManagement() {
         }
 
         let irNet = irBrut - deductionTotale;
-        return Math.max(0, Math.round(irNet));
+        return { 
+            ir: Math.max(0, Math.round(irNet)), 
+            taux: taux 
+        };
     };
 
     const calculateSNTL = (salaireBrut, sntlConfigList, roleId, gradeId, echelleId, echelonId) => {
@@ -519,65 +616,62 @@ export default function EmployeeManagement() {
     };
   
 
-    const calculateAssurancesSociales = (salaireBrut, assurancesConfigList) => {
+   const calculateAssurancesSociales = (salaireBrut, assurancesConfigList) => {
         if (!assurancesConfigList || assurancesConfigList.length === 0) {
-            return { total: 0, details: [] };
+            return { totalEmployeur: 0, totalSalarie: 0, total: 0, details: [] };
         }
         
-        let totalAssurances = 0;
+        let totalEmployeur = 0;
+        let totalSalarie = 0;
         const appliedAssurances = [];
         
         assurancesConfigList.forEach(assurance => {
             if (assurance.is_active) {
-                let montant = 0;
-                let tauxUtilise = 0;
+                let montantEmployeur = 0;
+                let montantSalarie = 0;
+                let tauxEmployeur = 0;
+                let tauxSalarie = 0;
                 
-                // Vérifier s'il y a des tranches
-                if (assurance.tranches && assurance.tranches.length > 0) {
-                    // Parcourir les tranches pour trouver la bonne
-                    for (const tranche of assurance.tranches) {
-                        const minSalaire = parseFloat(tranche.min_salaire) || 0;
-                        const maxSalaire = tranche.max_salaire ? parseFloat(tranche.max_salaire) : Infinity;
-                        
-                        if (salaireBrut >= minSalaire && salaireBrut <= maxSalaire) {
-                            // Utiliser le taux de la tranche
-                            tauxUtilise = parseFloat(tranche.taux_employeur) || 0;
-                            montant = (salaireBrut * tauxUtilise) / 100;
-                            break;
-                        }
-                    }
-                } else {
-                    // Pas de tranches, utiliser le taux par défaut
-                    tauxUtilise = parseFloat(assurance.taux_employeur) || 0;
-                    montant = (salaireBrut * tauxUtilise) / 100;
-                }
+                // ✅ Utiliser les taux directs (sans tranches)
+                tauxEmployeur = parseFloat(assurance.taux_employeur) || 0;
+                tauxSalarie = parseFloat(assurance.taux_salarie) || 0;
                 
-                // Vérifier le plafond si existe
+                // Calculer les montants
+                montantEmployeur = (salaireBrut * tauxEmployeur) / 100;
+                montantSalarie = (salaireBrut * tauxSalarie) / 100;
+                
+                // ✅ Vérifier le plafond si existe (appliqué au montant employeur)
                 let plafondMensuel = assurance.plafond_mensuel ? parseFloat(assurance.plafond_mensuel) : null;
-                if (plafondMensuel && montant > plafondMensuel) {
-                    montant = plafondMensuel;
+                if (plafondMensuel && montantEmployeur > plafondMensuel) {
+                    // Appliquer le plafond proportionnellement si besoin
+                    const ratio = plafondMensuel / montantEmployeur;
+                    montantEmployeur = plafondMensuel;
+                    montantSalarie = montantSalarie * ratio;
                 }
                 
-                totalAssurances += montant;
+                totalEmployeur += montantEmployeur;
+                totalSalarie += montantSalarie;
+                
                 appliedAssurances.push({
                     id: assurance.id,
                     name: assurance.name,
                     code: assurance.code,
-                    type: assurance.type,
-                    taux: tauxUtilise,
-                    montant: montant,
-                    plafond: plafondMensuel,
-                    tranche_utilisee: assurance.tranches ? `Tranche ${assurance.tranches.findIndex(t => 
-                        salaireBrut >= (parseFloat(t.min_salaire) || 0) && 
-                        salaireBrut <= (t.max_salaire ? parseFloat(t.max_salaire) : Infinity)
-                    ) + 1}` : null
+                    taux_employeur: tauxEmployeur,
+                    taux_salarie: tauxSalarie,
+                    montant_employeur: montantEmployeur,
+                    montant_salarie: montantSalarie,
+                    plafond: plafondMensuel
                 });
             }
         });
         
-        return { total: totalAssurances, details: appliedAssurances };
+        return { 
+            totalEmployeur: totalEmployeur,
+            totalSalarie: totalSalarie,
+            total: totalEmployeur + totalSalarie,
+            details: appliedAssurances 
+        };
     };
-
 
 
     const calculerMensualiteCredit = (montant, tauxAnnuel, dureeMois) => {
@@ -602,6 +696,7 @@ export default function EmployeeManagement() {
     const calculateSalaryDetails = (employee, cotisationsList, rcarTypesList, sntlConfigList, assurancesConfigList, creditsConfigList) => {
         const baseSalary = parseFloat(employee.salaire) || 0;
         
+        // 1. Indemnités
         const indemnitesResult = calculateIndemnitesForEmployee(
             baseSalary,
             employee.role_id,
@@ -612,20 +707,44 @@ export default function EmployeeManagement() {
         
         const brutSalary = baseSalary + indemnitesResult.total;
         
+        // 2. Cotisations
         const cotisationsResult = calculateAllCotisations(
             brutSalary, 
             employee.cotisation_id,
             cotisationsList
         );
         
-        const rcarResult = calculateRCAR(brutSalary, rcarTypesList);
+        const verifierAgePourRetraite = (dateNaissance) => {
+            if (!dateNaissance) return 0;
+            const aujourdhui = new Date();
+            const dateNaiss = new Date(dateNaissance);
+            let age = aujourdhui.getFullYear() - dateNaiss.getFullYear();
+            const m = aujourdhui.getMonth() - dateNaiss.getMonth();
+            if (m < 0 || (m === 0 && aujourdhui.getDate() < dateNaiss.getDate())) {
+                age--;
+            }
+            return age;
+        };
         
-        const ir = calculateIR(
+        const ageEmployee = verifierAgePourRetraite(employee.date_naissance);
+        const ageRetraite = retraiteSettings?.age_legal || 60;
+        
+        let rcarResult = { totalSalariale: 0, totalPatronale: 0, totalAutres: 0, totalGeneral: 0, types: [], details: [] };
+        
+        if (ageEmployee < ageRetraite) {
+            rcarResult = calculateRCAR(brutSalary, rcarTypesList);
+        }
+        
+        // 4. IR
+        const irResult = calculateIR(
             brutSalary, 
             employee.situation_familiale, 
             parseInt(employee.nombre_enfants) || 0
         );
+        const ir = irResult.ir;
+        const trancheIR = irResult.taux;
         
+        // 5. SNTL
         const sntlResult = calculateSNTL(
             brutSalary,
             sntlConfigList,
@@ -635,11 +754,13 @@ export default function EmployeeManagement() {
             employee.echelon_id
         );
         
-    const assurancesResult = calculateAssurancesSociales(
+        // 6. ASSURANCES (avec distinction employeur/salarié)
+        const assurancesResult = calculateAssurancesSociales(
             brutSalary,
             assurancesConfigList
         );
-            
+        
+        // 7. CRÉDITS
         let creditsResult = { total: 0, details: [], nombre_credits: 0 };
         
         if (employee.credits && employee.credits.length > 0) {
@@ -684,30 +805,56 @@ export default function EmployeeManagement() {
             }
         }
         
-       const totalDeductions = cotisationsResult.total + ir + (rcarResult.totalSalariale + rcarResult.totalPatronale + rcarResult.totalAutres) + sntlResult.total + assurancesResult.total + creditsResult.total;
+        // 8. TOTAL DÉDUCTIONS (CE QUI SE DÉDUIT DU SALAIRE DU SALARIÉ)
+        const totalDeductions = cotisationsResult.total + ir + 
+                                (rcarResult.totalSalariale + rcarResult.totalPatronale + rcarResult.totalAutres) + 
+                                sntlResult.total + 
+                                assurancesResult.totalSalarie +  
+                                creditsResult.total;
+        
+        // 9. SALAIRE NET
         const netSalary = brutSalary - totalDeductions;
         
+        // 10. RETOUR
         return {
+            // Salaire
             baseSalary,
             totalIndemnites: indemnitesResult.total,
             appliedIndemnites: indemnitesResult.appliedIndemnites,
             brutSalary,
+            netSalary,
+            
+            // Cotisations
             cotisations: cotisationsResult,
+            
+            // RCAR
             rcar: rcarResult,
             rcarTotalSalariale: rcarResult.totalSalariale,
             rcarTotalPatronale: rcarResult.totalPatronale,
             rcarTotalAutres: rcarResult.totalAutres,
             rcarTypes: rcarResult.types,
             rcarDetails: rcarResult.details,
+            
+            // SNTL
             sntl: sntlResult,
-            assurances: assurancesResult,
+            
+            // ASSURANCES
+            assurances: assurancesResult,              // Total (employeur + salarié)
+            assurancesSalarie: assurancesResult.totalSalarie,  
+            assurancesEmployeur: assurancesResult.totalEmployeur, 
+            assurancesDetails: assurancesResult.details,
+            
+            // Crédits
             credits: creditsResult,
+            
+            // IR
             ir,
+            trancheIR,
+            
+            // Totaux
             totalDeductions,
-            netSalary
         };
     };
-
 
 
     // ============================================================
@@ -816,14 +963,12 @@ export default function EmployeeManagement() {
             if (!selectedAnnee) return;
             
             try {
-                const [assurancesRes, creditsRes, sntlRes] = await Promise.all([
+                const [assurancesRes, sntlRes] = await Promise.all([
                     axiosClient.get(`/api/assurances/get-by-year/${selectedAnnee}`),
-                    axiosClient.get(`/api/credits/active/${selectedAnnee}`),
                     axiosClient.get(`/api/sntl/configs/${selectedAnnee}`)
                 ]);
                 
                 setAssurancesConfig(assurancesRes.data.assurances || []);
-                setCreditsConfig(creditsRes.data || []);
                 setSntlConfig(sntlRes.data || []);
                 
             } catch (err) {
@@ -944,6 +1089,9 @@ export default function EmployeeManagement() {
         setFormData(prev => ({ ...prev, [name]: value }));
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
+        }
+        if (name === 'date_naissance') {
+            verifierAgeRetraite(value);
         }
     };
 
@@ -1086,7 +1234,6 @@ export default function EmployeeManagement() {
                 situation_familiale: formData.situation_familiale || null,
                 nombre_enfants: formData.nombre_enfants ? parseInt(formData.nombre_enfants) : 0,
                 date_embauche: formData.date_embauche || null,
-                poste: selectedPost?.name || null,
                 annee_id: selectedAnneeId,
                 Post_id: formData.Post_id ? parseInt(formData.Post_id) : null,
                 grade_id: formData.grade_id ? parseInt(formData.grade_id) : null,
@@ -1440,7 +1587,7 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                                     <div>
                                         <span className="text-sm font-medium">IR (Impôt sur le revenu)</span>
                                         <p className={`text-xs ${textMutedClass} mt-0.5`}>
-                                            Tranche appliquée: {details.ir > 0 ? `${Math.round((details.ir / details.brutSalary) * 100)}%` : 'Exonéré'}
+                                            Taux: {details.trancheIR || 0}%
                                         </p>
                                     </div>
                                     <span className="text-sm font-semibold text-rose-600">- {formatMoney(details.ir)}</span>
@@ -1547,7 +1694,7 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                             )}
                             
                             {/* Assurances sociales */}
-                            {details.assurances?.details?.length > 0 && (
+                            {details.assurancesDetails?.length > 0 && (
                                 <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
@@ -1555,24 +1702,30 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                                         </div>
                                         <h4 className="text-sm font-semibold">Assurances sociales</h4>
                                     </div>
-                                    {details.assurances.details.map((ass, idx) => (
-                                        <div key={idx} className="flex justify-between items-center py-1.5 border-b ${borderClass} last:border-0">
+                                    {details.assurancesDetails.map((ass, idx) => (
+                                        <div key={idx} className="flex justify-between items-center py-1.5 border-b last:border-0">
                                             <div>
                                                 <span className="text-sm">{ass.name}</span>
-                                                <span className={`text-xs ml-2 ${textMutedClass}`}>({ass.code} - {ass.taux}%)</span>
-                                                {ass.tranche_utilisee && (
-                                                    <span className={`text-xs ml-2 ${textMutedClass}`}>| {ass.tranche_utilisee}</span>
-                                                )}
+                                                <span className={`text-xs ml-2 ${textMutedClass}`}>
+                                                    (Taux total: {ass.taux_employeur + ass.taux_salarie}%)
+                                                </span>
                                                 {ass.plafond && (
                                                     <p className={`text-xs ${textMutedClass} mt-0.5`}>Plafond: {formatMoney(ass.plafond)}</p>
                                                 )}
                                             </div>
-                                            <span className="text-sm text-rose-600">- {formatMoney(ass.montant)}</span>
+                                            <div className="text-right">
+                                                {ass.montant_salarie > 0 && (
+                                                    <div className="text-rose-600 text-sm">- {formatMoney(ass.montant_salarie)}</div>
+                                                )}
+                                                {ass.montant_employeur > 0 && (
+                                                    <div className="text-emerald-600 text-[10px]">+ {formatMoney(ass.montant_employeur)} (employeur)</div>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
-                                    <div className="flex justify-between items-center mt-2 pt-2 border-t ${borderClass}">
-                                        <span className="text-sm font-semibold">Total assurances</span>
-                                        <span className="text-sm font-bold text-rose-600">- {formatMoney(details.assurances.total)}</span>
+                                    <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                                        <span className="text-sm font-semibold">Total déduit</span>
+                                        <span className="text-sm font-bold text-rose-600">- {formatMoney(details.assurancesSalarie)}</span>
                                     </div>
                                 </div>
                             )}
@@ -1662,7 +1815,7 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                     
                     {/* ===== BOUTON FERMER ===== */}
                     <div className="flex gap-3 pt-4 border-t ${borderClass}">
-                        <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600text-white font-medium hover:from-indigo-700 hover:to-purple-700 transition-all cursor-pointer">
+                        <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:from-indigo-700 hover:to-purple-700 transition-all cursor-pointer">
                             Fermer
                         </button>
                     </div>
@@ -1782,6 +1935,12 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                                     <label className={`text-xs font-medium ${textMutedClass} mb-1 block`}>Date de naissance</label>
                                     <input type="date" name="date_naissance" value={formData.date_naissance || ''} onChange={handleChange} className={`${errors.date_naissance ? inputErrorClass : inputClass}`} required />
                                     {errors.date_naissance && (<p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} /> {errors.date_naissance}</p>)}
+                                    {/* Message d'âge pour RCAR */}
+                                    {ageMessage && (
+                                                <p className={`text-sm ${isRcarDisabled ? 'text-amber-800 dark:text-amber-300' : 'text-emerald-800 dark:text-emerald-300'}`}>
+                                                    {ageMessage}
+                                                </p>
+                                    )}
                                 </div>
 
                                 <div><label className={`text-xs font-medium ${textMutedClass} mb-1 block`}>Date d'embauche</label><input type="date" name="date_embauche" value={formData.date_embauche || ''} onChange={handleChange} className={errors.date_embauche ? inputErrorClass : inputClass} required />{errors.date_embauche && <p className="text-red-500 text-xs mt-1">{errors.date_embauche}</p>}</div>
@@ -1983,7 +2142,7 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                                 </div>
                             </div>
 
-                            <button type="submit" disabled={loading} className="cursor-pointer w-full py-3 bg-blue-600text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25">
+                            <button type="submit" disabled={loading} className="cursor-pointer w-full py-3 bg-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25">
                                 {loading ? <Loader size={18} className="animate-spin" /> : <Save size={18} />}
                                 {loading ? "Enregistrement..." : isEdit ? "Mettre a jour" : "Enregistrer"}
                             </button>

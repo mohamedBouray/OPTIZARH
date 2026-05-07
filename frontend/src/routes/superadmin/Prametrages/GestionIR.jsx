@@ -419,14 +419,14 @@ const GestionIR = () => {
                             <button 
                                 onClick={openDeleteModal}
                                 disabled={!annee}
-                                className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${!annee ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+                                className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${!annee ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-red-600 hover:bg-red-600 text-white'}`}
                             >
                                 <Trash2 size={14} /> Supprimer config
                             </button>
                             <button 
                                 onClick={handleExportPDF}
                                 disabled={!annee}
-                                className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${!annee ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-emerald-500 hover:bg-emerald-600 text-white'}`}
+                                className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${!annee ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-emerald-600 hover:bg-emerald-600 text-white'}`}
                             >
                                 <Download size={14} /> Export PDF
                             </button>

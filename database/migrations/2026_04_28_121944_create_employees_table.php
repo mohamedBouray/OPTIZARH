@@ -14,13 +14,10 @@ return new class extends Migration {
             $table->string('email')->unique();
             $table->string('telephone')->nullable();
             $table->date('date_naissance')->nullable();
-            $table->string('adresse')->nullable();
             $table->string('situation_familiale')->nullable();
             $table->integer('nombre_enfants')->default(0);
-            $table->string('departement')->nullable();
             $table->date('date_embauche')->nullable();
-            $table->string('poste')->nullable();
-            $table->string('type_contrat')->nullable();
+
 
             // IDs pour la classification
             $table->unsignedBigInteger('annee_id')->nullable();
