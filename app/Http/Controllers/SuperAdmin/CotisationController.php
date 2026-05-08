@@ -11,9 +11,6 @@ use App\Models\SuperAdmin\Cotisation;
 
 class CotisationController extends Controller
 {
-    /**
-     * Get cotisations configuration for a year
-     */
     public function index(Request $request)
     {
         try {
@@ -56,9 +53,6 @@ class CotisationController extends Controller
         }
     }
 
-    /**
-     * Store cotisations configuration
-     */
     public function store(Request $request)
     {
         try {
@@ -73,7 +67,6 @@ class CotisationController extends Controller
             
             DB::beginTransaction();
             
-            // Delete old configuration
             Organisme::where('annee', $year)->delete();
 
             $orgCount = 0;
@@ -126,9 +119,6 @@ class CotisationController extends Controller
         }
     }
 
-    /**
-     * Delete an organisme
-     */
     public function destroyOrganisme($id)
     {
         try {
@@ -149,9 +139,6 @@ class CotisationController extends Controller
         }
     }
 
-    /**
-     * Delete a rubrique (cotisation)
-     */
     public function destroyRubrique($id)
     {
         try {
@@ -171,9 +158,6 @@ class CotisationController extends Controller
         }
     }
 
-    /**
-     * Toggle favorite status and propagate to all years
-     */
     public function toggleFavorite(Request $request, $id)
     {
         try {
@@ -244,9 +228,6 @@ class CotisationController extends Controller
         }
     }
 
-    /**
-     * Get years that have cotisations data
-     */
     public function getYearsWithData()
     {
         try {

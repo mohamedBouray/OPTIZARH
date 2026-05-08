@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
-
 use App\Models\SuperAdmin\CreditType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class CreditController extends Controller
 {
-    // ==================== CREDIT TYPES ====================
     public function getTypes()
     {
         $types = CreditType::orderBy('sort_order')->get();

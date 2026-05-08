@@ -54,7 +54,6 @@ class EmployeeController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
     public function index(Request $request)
     {
         try {
@@ -77,23 +76,15 @@ class EmployeeController extends Controller
                 $query->where('statut', $request->statut);
             }
 
-            $employees = $query->select([
-                'employees.*',
-                'credit_type_id',
-                'montant_credit',
-                'taux_credit',
-                'credit_duree',
-                'credit_date_debut',
-                'credit_date_fin',
-                'credit_mensualite',
-                'credit_reste_a_payer'
-            ])->orderBy('created_at', 'desc')->paginate(10);
+            $employees = $query->with(['post', 'gradeRel', 'echelleRel', 'echelonRel'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
             
-            $this->logActivity(
-                'Consultation employés',
-                'READ',
-                'Affichage de la liste des employés (Page ' . ($request->page ?? 1) . ')'
-            );
+            $employees->getCollection()->transform(function ($employee) {
+                $employee->date_naissance = $employee->date_naissance ? date('Y-m-d', strtotime($employee->date_naissance)) : null;
+                $employee->date_embauche = $employee->date_embauche ? date('Y-m-d', strtotime($employee->date_embauche)) : null;
+                return $employee;
+            });
             
             return response()->json($employees);
         } catch (\Exception $e) {
@@ -115,7 +106,6 @@ class EmployeeController extends Controller
                 'nombre_enfants' => 'nullable|integer|min:0|max:20',
                 'departement' => 'nullable|string',
                 'date_embauche' => 'nullable|date',
-
                 'type_contrat' => 'nullable|string',
                 'annee_id' => 'required|exists:salary_years,id',
                 'Post_id' => 'nullable|exists:Post,id',
@@ -127,7 +117,7 @@ class EmployeeController extends Controller
                 'echelon' => 'nullable|string',  
                 'salaire' => 'nullable|numeric|min:0',
                 'indice' => 'nullable|numeric|min:0',
-                'statut' => 'nullable|string|in:ACTIF,CONGÉ,DÉPART',
+                'statut' => 'nullable|string|in:ACTIF,CONGE,DEPART',
                 'cotisation_type' => 'nullable|string',
                 'cotisation_id' => 'required|integer', 
                 'cotisation_rubrique_id' => 'nullable|integer',
@@ -150,8 +140,6 @@ class EmployeeController extends Controller
             if (isset($validated['echelon']) && $validated['echelon'] !== null) {
                 $validated['echelon'] = (string) $validated['echelon'];
             }
-
-            // Calculer automatiquement la mensualité si non fournie
             if (isset($validated['montant_credit']) && isset($validated['taux_credit']) && isset($validated['credit_duree'])) {
                 if (!isset($validated['credit_mensualite']) || $validated['credit_mensualite'] == 0) {
                     $validated['credit_mensualite'] = $this->calculerMensualiteCredit(
@@ -161,13 +149,11 @@ class EmployeeController extends Controller
                     );
                 }
                 
-                // Initialiser le reste à payer
                 if (!isset($validated['credit_reste_a_payer'])) {
                     $validated['credit_reste_a_payer'] = $validated['montant_credit'];
                 }
             }
 
-            // Calculer automatiquement la date de fin si non fournie
             if (isset($validated['credit_date_debut']) && isset($validated['credit_duree']) && !isset($validated['credit_date_fin'])) {
                 $dateDebut = new \DateTime($validated['credit_date_debut']);
                 $dateFin = clone $dateDebut;
@@ -235,10 +221,9 @@ class EmployeeController extends Controller
                 'adresse' => 'nullable|string|max:500',
                 'situation_familiale' => 'nullable|string|max:50',
                 'nombre_enfants' => 'nullable|integer|min:0|max:20',
-                'departement' => 'nullable|string|max:100',
+                // 'departement' => 'nullable|string|max:100',
                 'date_embauche' => 'nullable|date',
-                
-                'type_contrat' => 'nullable|string|max:50',
+                // 'type_contrat' => 'nullable|string|max:50',
                 'annee_id' => 'sometimes|exists:salary_years,id',
                 'Post_id' => 'nullable|exists:Post,id',
                 'grade_id' => 'nullable|exists:grades,id',
@@ -258,7 +243,6 @@ class EmployeeController extends Controller
                 'rcar_type_id' => 'nullable|exists:rcar_types,id',
                 'rcar_type_label' => 'nullable|string|max:255',
                 'rcar_taux' => 'nullable|numeric|min:0|max:100',
-                // Champs crédit
                 'credit_type_id' => 'nullable|exists:credit_types,id',
                 'montant_credit' => 'nullable|numeric|min:0',
                 'taux_credit' => 'nullable|numeric|min:0|max:100',
@@ -276,8 +260,6 @@ class EmployeeController extends Controller
             $request->validate($rules);
             
             $data = $request->all();
-            
-            // Recalculer la mensualité si les données du crédit changent
             if (isset($data['montant_credit']) || isset($data['taux_credit']) || isset($data['credit_duree'])) {
                 $montant = $data['montant_credit'] ?? $employee->montant_credit;
                 $taux = $data['taux_credit'] ?? $employee->taux_credit;
@@ -501,7 +483,6 @@ public function addCredit(Request $request, $employeeId)
             'description' => 'nullable|string'
         ]);
         
-        // Calculer la mensualité si non fournie
         if (!isset($validated['credit_mensualite']) || $validated['credit_mensualite'] == 0) {
             $validated['credit_mensualite'] = $this->calculerMensualiteCredit(
                 $validated['montant_credit'],
@@ -510,7 +491,6 @@ public function addCredit(Request $request, $employeeId)
             );
         }
         
-        // Calculer la date de fin si non fournie
         if (!isset($validated['credit_date_fin']) && isset($validated['credit_date_debut'])) {
             $dateDebut = new \DateTime($validated['credit_date_debut']);
             $dateFin = clone $dateDebut;
@@ -518,7 +498,7 @@ public function addCredit(Request $request, $employeeId)
             $validated['credit_date_fin'] = $dateFin->format('Y-m-d');
         }
         
-        // Initialiser le reste à payer
+
         if (!isset($validated['credit_reste_a_payer'])) {
             $validated['credit_reste_a_payer'] = $validated['montant_credit'];
         }

@@ -76,8 +76,8 @@ class DashboardController extends Controller
             
             foreach ($employees as $emp) {
                 if ($emp->statut === 'ACTIF') $activeEmployees++;
-                elseif ($emp->statut === 'CONGE') $congeEmployees++;
-                elseif ($emp->statut === 'DEPART') $departEmployees++;
+                elseif ($emp->statut === 'CONGE' || $emp->statut === 'CONGÉ') $congeEmployees++;
+                elseif ($emp->statut === 'DEPART' || $emp->statut === 'DÉPART') $departEmployees++;
                 
                 $indemnitesTotal = $this->calculerIndemnitesPourEmploye($emp, $yearId);
                 $salaireBrut = ($emp->salaire ?? 0) + $indemnitesTotal;
@@ -103,8 +103,11 @@ class DashboardController extends Controller
             $totalCreditAmount = EmployeeCredit::sum('montant_credit') ?: 0;
             $totalCreditsMensualites = EmployeeCredit::where('statut', 'ACTIF')->sum('credit_mensualite') ?: 0;
             
+            // Compatible SQLite et MySQL
             $creditsByYear = EmployeeCredit::select(
-                DB::raw('YEAR(created_at) as year'), 
+                DB::raw(DB::connection()->getDriverName() === 'sqlite' 
+                    ? "strftime('%Y', created_at) as year" 
+                    : "YEAR(created_at) as year"), 
                 DB::raw('count(*) as total')
             )
             ->whereNotNull('created_at')
@@ -117,20 +120,20 @@ class DashboardController extends Controller
             $totalCotisations = 0;
             $cotisationsDetails = [];
             
-            if ($totalSalaireBrut > 0) {
-                $cotisations = Cotisation::all();
-                foreach ($cotisations as $cot) {
-                    $montant = ($totalSalaireBrut * ($cot->taux / 100));
-                    $totalCotisations += $montant;
-                    $cotisationsDetails[] = [
-                        'name' => $cot->name ?? 'Cotisation',
-                        'total' => round($montant, 2)
-                    ];
-                }
+            $cotisations = Cotisation::all();
+            foreach ($cotisations as $cot) {
+                $montant = ($totalSalaireBrut * ($cot->taux / 100));
+                $totalCotisations += $montant;
+                $cotisationsDetails[] = [
+                    'name' => $cot->name ?? 'Cotisation',
+                    'total' => round($montant, 2)
+                ];
             }
             
             // ==================== RCAR ====================
             $totalRCAR = 0;
+            $rcarDetails = [];
+            
             if ($yearId) {
                 $rcarTypes = RcarType::where('salary_year_id', $yearId)->get();
                 foreach ($rcarTypes as $rcarType) {
@@ -140,70 +143,99 @@ class DashboardController extends Controller
                         if ($detail->plafond && $detail->plafond > 0) {
                             $baseCalcul = min($totalSalaireBrut, $detail->plafond);
                         }
-                        $totalRCAR += ($baseCalcul * ($detail->percentage / 100));
+                        $montant = ($baseCalcul * ($detail->percentage / 100));
+                        $totalRCAR += $montant;
+                        $rcarDetails[] = [
+                            'name' => $detail->designation ?? $rcarType->label,
+                            'total' => round($montant, 2)
+                        ];
                     }
                 }
             }
             
-            // ==================== IR (estimé) ====================
+            // ==================== IR (calcul précis) ====================
             $totalIR = 0;
+            
+            // Barèmes IR Maroc 2025
+            $irBaremes = [
+                ['min' => 0, 'max' => 30000, 'taux' => 0, 'deduction' => 0],
+                ['min' => 30001, 'max' => 50000, 'taux' => 0.10, 'deduction' => 3000],
+                ['min' => 50001, 'max' => 60000, 'taux' => 0.20, 'deduction' => 8000],
+                ['min' => 60001, 'max' => 80000, 'taux' => 0.30, 'deduction' => 14000],
+                ['min' => 80001, 'max' => 180000, 'taux' => 0.34, 'deduction' => 17200],
+                ['min' => 180001, 'max' => PHP_FLOAT_MAX, 'taux' => 0.38, 'deduction' => 24400],
+            ];
+            
             foreach ($employees as $emp) {
                 $salaireBrut = ($emp->salaire ?? 0) + $this->calculerIndemnitesPourEmploye($emp, $yearId);
-                if ($salaireBrut > 10000) {
-                    $totalIR += $salaireBrut * 0.35;
-                } elseif ($salaireBrut > 6000) {
-                    $totalIR += $salaireBrut * 0.25;
-                } elseif ($salaireBrut > 3000) {
-                    $totalIR += $salaireBrut * 0.15;
-                } else {
-                    $totalIR += $salaireBrut * 0.05;
+                $salaireAnnuel = $salaireBrut * 12;
+                
+                $irAnnuel = 0;
+                foreach ($irBaremes as $tranche) {
+                    if ($salaireAnnuel > $tranche['min']) {
+                        $assiette = min($salaireAnnuel, $tranche['max']) - $tranche['min'];
+                        if ($assiette > 0) {
+                            $irAnnuel += $assiette * $tranche['taux'];
+                        }
+                    }
                 }
+                
+                // Déduction pour famille
+                $nombreEnfants = $emp->nombre_enfants ?? 0;
+                $deductionEnfant = $nombreEnfants > 0 ? 360 * $nombreEnfants : 0;
+                $irAnnuel -= $deductionEnfant;
+                $irAnnuel = max(0, $irAnnuel);
+                
+                $totalIR += $irAnnuel / 12;
             }
             
             // ==================== ASSURANCES ====================
             $totalAssurances = 0;
+            $assurancesDetails = [];
+            
             if ($yearId) {
-                $assurances = Assurance::where('annee_id', $yearId)->get();
+                $assurances = Assurance::where('annee_id', $yearId)->where('is_active', true)->get();
                 foreach ($assurances as $assurance) {
                     if ($assurance->taux_employeur > 0) {
                         $baseCalcul = $totalSalaireBrut;
                         if ($assurance->plafond_mensuel && $assurance->plafond_mensuel > 0) {
-                            $baseCalcul = min($totalSalaireBrut, $assurance->plafond_mensuel);
+                            $nombreEmployes = max(1, $employees->count());
+                            $plafondTotal = $assurance->plafond_mensuel * $nombreEmployes;
+                            $baseCalcul = min($totalSalaireBrut, $plafondTotal);
                         }
-                        $totalAssurances += ($baseCalcul * ($assurance->taux_employeur / 100));
+                        $montant = ($baseCalcul * ($assurance->taux_employeur / 100));
+                        $totalAssurances += $montant;
+                        $assurancesDetails[] = [
+                            'name' => $assurance->name,
+                            'total' => round($montant, 2)
+                        ];
                     }
                 }
             }
             
             // ==================== SNTL ====================
             $totalSNTL = 0;
+            $sntlDetails = [];
+            
             if ($yearId) {
                 $sntlConfigs = SntlSetting::where('salary_year_id', $yearId)->get();
                 foreach ($sntlConfigs as $sntl) {
                     if ($sntl->type_montant === 'pourcentage') {
-                        $totalSNTL += ($totalSalaireBrut * ($sntl->valeur / 100));
+                        $montant = ($totalSalaireBrut * ($sntl->valeur / 100));
                     } else {
-                        $totalSNTL += $sntl->valeur * $totalEmployees;
+                        $montant = $sntl->valeur;
                     }
+                    $totalSNTL += $montant;
+                    $sntlDetails[] = [
+                        'name' => $sntl->label ?? 'SNTL',
+                        'total' => round($montant, 2)
+                    ];
                 }
             }
             
             // ==================== TOTAUX ====================
             $totalDeductionsSalarie = $totalCotisations + $totalRCAR + $totalCreditsMensualites + $totalIR;
             $totalChargesPatronales = $totalAssurances + $totalSNTL;
-            
-            // ==================== ÉVOLUTION DES CHARGES (POUR OPTION 2 - garder pour les stats) ====================
-            $months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-            $monthlyDummyData = [];
-            
-            for ($i = 0; $i < 12; $i++) {
-                $variation = 0.85 + ($i * 0.03);
-                $monthlyDummyData[] = [
-                    'name' => $months[$i],
-                    'cotisations' => 0,
-                    'rcar' => 0
-                ];
-            }
             
             // ==================== STATUTS ====================
             $employeeStatus = [
@@ -240,9 +272,11 @@ class DashboardController extends Controller
                 'charts' => [
                     'credits_by_year' => $creditsByYear,
                     'salary_by_grade' => $salaryByGrade,
-                    'monthly_evolution' => $monthlyDummyData,
                     'employee_status' => $employeeStatus,
-                    'cotisations_details' => $cotisationsDetails
+                    'cotisations_details' => $cotisationsDetails,
+                    'assurances_details' => $assurancesDetails,
+                    'rcar_details' => $rcarDetails,
+                    'sntl_details' => $sntlDetails
                 ],
                 'current_year' => (int)$annee,
                 'available_years' => $availableYears
@@ -275,9 +309,11 @@ class DashboardController extends Controller
                 'charts' => [
                     'credits_by_year' => [],
                     'salary_by_grade' => [],
-                    'monthly_evolution' => [],
                     'employee_status' => [],
-                    'cotisations_details' => []
+                    'cotisations_details' => [],
+                    'assurances_details' => [],
+                    'rcar_details' => [],
+                    'sntl_details' => []
                 ],
                 'current_year' => (int)$annee,
                 'available_years' => [date('Y')]

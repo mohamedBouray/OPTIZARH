@@ -29,7 +29,6 @@ class GestionEtatController extends Controller
             return response()->json(['year' => (int) $year, 'Post' => []]);
         }
         
-        // ✅ Charger les posts AVEC leurs relations (grades, echelles, echelons)
         $posts = Post::where('salary_year_id', $salaryYear->id)
             ->with(['grades' => function($query) {
                 $query->with(['echelles' => function($query) {
@@ -38,7 +37,6 @@ class GestionEtatController extends Controller
             }])
             ->get();
         
-        // ✅ Construire la réponse
         $response = [
             'id' => $salaryYear->id,
             'year' => $salaryYear->year,
@@ -513,12 +511,12 @@ class GestionEtatController extends Controller
 
             if (!$oldStatus && $post->is_starred) {
                 $this->copyPostToAllYears($post);
-                $message = "⭐ Poste '{$post->name}' étoilé et copié vers toutes les années";
+                $message = " Poste '{$post->name}' étoilé et copié vers toutes les années";
             } else if ($oldStatus && !$post->is_starred) {
                 $this->removePostFromAllOtherYears($post);
-                $message = "⭐ Poste '{$post->name}' désétoilé et retiré des autres années";
+                $message = " Poste '{$post->name}' désétoilé et retiré des autres années";
             } else {
-                $message = $post->is_starred ? "⭐ Poste '{$post->name}' étoilé" : "⭐ Poste '{$post->name}' désétoilé";
+                $message = $post->is_starred ? " Poste '{$post->name}' étoilé" : " Poste '{$post->name}' désétoilé";
             }
 
             Cache::forget('starred_posts');
