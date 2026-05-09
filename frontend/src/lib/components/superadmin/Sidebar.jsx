@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, Settings, Gift, PiggyBank, ShieldCheck, Percent, HandCoins, GraduationCap, 
-  Hospital, Truck, LogOut, History, FileText, Calendar, Clock
+  Hospital, Truck, LogOut, History, FileText, Calendar, Clock,User
 } from "lucide-react";
 import axiosClient from "../../apis/axiosConfig";
 import { useTheme } from "../../../context/ThemeContext";
@@ -13,69 +13,37 @@ export default function Sidebar({ onLinkClick, isMobile }) {
     const role = localStorage.getItem('role') || 'superadmin';
     const { darkMode } = useTheme();
 
-    // ⭐ Navigation par rôle
     const navigation = {
         superadmin: {
             main: [
                 { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, path: "/SuperAdmin/Dashboard" },
+                { label: "Employés", icon: <Users size={20} />, path: "/SuperAdmin/users" },
                 { label: "Paramétrages", icon: <Settings size={20} />, path: "/SuperAdmin/Parametrages" },
-                { label: "Utilisateurs", icon: <Users size={20} />, path: "/SuperAdmin/users" },
                 { label: "Indemnités", icon: <Gift size={20} />, path: "/SuperAdmin/AffichageIndementes" },
                 { label: "Cotisation", icon: <PiggyBank size={20} />, path: "/SuperAdmin/Cotisation" },
                 { label: "RCAR", icon: <ShieldCheck size={20} />, path: "/SuperAdmin/RCAR" },
                 { label: "IR", icon: <Percent size={20} />, path: "/SuperAdmin/IRAffichage" },
-                { label: "Retraite & Tamdid", icon: <GraduationCap size={20} />, path: "/SuperAdmin/Retraite" },
+                { label: "Retraite", icon: <GraduationCap size={20} />, path: "/SuperAdmin/Retraite" },
                 { label: "Assurances", icon: <Hospital size={20} />, path: "/SuperAdmin/assurances" },
                 { label: "SNTL", icon: <Truck size={20} />, path: "/SuperAdmin/SNTL" },
-            ],
-            admin: [
-                { label: "Dashboard Admin", icon: <LayoutDashboard size={20} />, path: "/Admin/Dashboard" },
-                { label: "Employés", icon: <Users size={20} />, path: "/Admin/Employees" },
-                { label: "Présences", icon: <Calendar size={20} />, path: "/Admin/Presences" },
-                { label: "Congés", icon: <Clock size={20} />, path: "/Admin/Conges" },
-            ],
-            rh: [
-                { label: "Dashboard RH", icon: <LayoutDashboard size={20} />, path: "/RH/Dashboard" },
-                { label: "Recrutement", icon: <Users size={20} />, path: "/RH/Recrutement" },
-                { label: "Formation", icon: <GraduationCap size={20} />, path: "/RH/Formation" },
-                { label: "Évaluations", icon: <FileText size={20} />, path: "/RH/Evaluations" },
-            ],
-            employee: [
-                { label: "Mon Dashboard", icon: <LayoutDashboard size={20} />, path: "/Employee/Dashboard" },
-                { label: "Mon Profil", icon: <Users size={20} />, path: "/Employee/Profil" },
-                { label: "Mes Congés", icon: <Calendar size={20} />, path: "/Employee/Conges" },
-                { label: "Mes Documents", icon: <FileText size={20} />, path: "/Employee/Documents" },
             ]
         },
         admin: {
             main: [
                 { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, path: "/Admin/Dashboard" },
-                { label: "Employés", icon: <Users size={20} />, path: "/Admin/Employees" },
-                { label: "Présences", icon: <Calendar size={20} />, path: "/Admin/Presences" },
-                { label: "Congés", icon: <Clock size={20} />, path: "/Admin/Conges" },
-                { label: "Paramètres", icon: <Settings size={20} />, path: "/Admin/Parametres" },
-            ],
-            admin: []
+            ]
         },
         rh: {
             main: [
                 { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, path: "/RH/Dashboard" },
-                { label: "Recrutement", icon: <Users size={20} />, path: "/RH/Recrutement" },
-                { label: "Formation", icon: <GraduationCap size={20} />, path: "/RH/Formation" },
-                { label: "Évaluations", icon: <FileText size={20} />, path: "/RH/Evaluations" },
-                { label: "Paramètres", icon: <Settings size={20} />, path: "/RH/Parametres" },
-            ],
-            admin: []
+            ]
         },
         employee: {
             main: [
-                { label: "Mon Dashboard", icon: <LayoutDashboard size={20} />, path: "/Employee/Dashboard" },
-                { label: "Mon Profil", icon: <Users size={20} />, path: "/Employee/Profil" },
-                { label: "Mes Congés", icon: <Calendar size={20} />, path: "/Employee/Conges" },
-                { label: "Mes Documents", icon: <FileText size={20} />, path: "/Employee/Documents" },
-                { label: "Paramètres", icon: <Settings size={20} />, path: "/Employee/Parametres" },
-            ],
-            admin: []
+                { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, path: "/employee/Dashboard" },
+                { label: "Mes Demandes", icon: <FileText size={20} />, path: "/employee/Demande" },
+                { label: "Mon Profil", icon: <User size={20} />, path: "/employee/Profile" },
+            ]
         }
     };
 
@@ -94,25 +62,27 @@ export default function Sidebar({ onLinkClick, isMobile }) {
     };
 
     const getAdminItems = () => {
-        if (role === 'superadmin') {
-            return [
-                { label: "Logs", icon: <History size={20} />, path: "/SuperAdmin/Logs" },
-                { label: "Paramètres", icon: <Settings size={20} />, path: "/SuperAdmin/Parametres" },
-            ];
-        } else if (role === 'admin') {
-            return [
-                { label: "Paramètres", icon: <Settings size={20} />, path: "/Admin/Parametres" },
-            ];
-        } else if (role === 'rh') {
-            return [
-                { label: "Paramètres", icon: <Settings size={20} />, path: "/RH/Parametres" },
-            ];
-        } else if (role === 'employee') {
-            return [
-                { label: "Paramètres", icon: <Settings size={20} />, path: "/Employee/Parametres" },
-            ];
+        switch(role) {
+            case 'superadmin':
+                return [
+                    { label: "Logs", icon: <History size={20} />, path: "/SuperAdmin/Logs" },
+                    { label: "Paramètres", icon: <Settings size={20} />, path: "/SuperAdmin/Parametres" },
+                ];
+            case 'admin':
+                return [
+                    { label: "Paramètres", icon: <Settings size={20} />, path: "/Admin/Parametres" },
+                ];
+            case 'rh':
+                return [
+                    { label: "Paramètres", icon: <Settings size={20} />, path: "/RH/Parametres" },
+                ];
+            case 'employee':
+                return [
+                    { label: "Paramètres", icon: <Settings size={20} />, path: "/Employee/Parametres" },
+                ];
+            default:
+                return [];
         }
-        return [];
     };
 
     const getRoleTitle = () => {

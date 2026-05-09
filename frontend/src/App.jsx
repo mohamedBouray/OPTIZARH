@@ -51,6 +51,8 @@ import RHDashboard from './routes/Rh/Dashboard';
 
 // Employee Components
 import EmployeeDashboard from './routes/employee/Dashboard';
+import Profile from './routes/employee/Profile';
+import Demande from './routes/employee/Demande';
 
 /*
 |--------------------------------------------------------------------------
@@ -236,6 +238,8 @@ function AppContent() {
                 <Route element={<ProtectedRoute allowedRoles={['employee']} />}>
                     <Route element={<Layout />}>
                         <Route path="/Employee/Dashboard" element={<EmployeeDashboard />} />
+                        <Route path="/Employee/Demande" element={<Demande />} />
+                        <Route path="/Employee/Profile" element={<Profile />} />
                     </Route>
                 </Route>
 
