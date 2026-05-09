@@ -80,8 +80,13 @@ export default function EmployeeManagement() {
 
     const [formData, setFormData] = useState({
         prenom: "", nom: "", email: "", telephone: "",role:"",password:"",
+<<<<<<< HEAD
         date_naissance: "", adresse: "", situation_familiale: "", nombre_enfants: "",
         departement: "", date_embauche: "",
+=======
+        date_naissance: "", situation_familiale: "", nombre_enfants: "",
+        date_embauche: "",
+>>>>>>> bouray/main
         type_contrat: "", annee_id: "", Post_id: "", grade_id: "", echelle_id: "", echelon_id: "",
         grade: "", echelle: "", echelon: "", salaire: "", indice: "", statut: "ACTIF",
         cotisation_id: ""
@@ -112,6 +117,7 @@ export default function EmployeeManagement() {
     // FONCTIONS API
     // ============================================================
     const fetchRetraiteSettings = async () => {
+<<<<<<< HEAD
     if (!selectedAnnee) return;
         try {
             const res = await axiosClient.get(`/api/retraite/settings/${selectedAnnee}`);
@@ -127,6 +133,31 @@ export default function EmployeeManagement() {
         fetchRetraiteSettings();
     }
 }, [selectedAnnee]);
+=======
+        if (!selectedAnnee) return;
+            try {
+                const res = await axiosClient.get(`/api/retraite/settings/${selectedAnnee}`);
+                setRetraiteSettings(res.data);
+            } catch (err) {
+                console.error("Erreur chargement retraite settings:", err);
+                setRetraiteSettings(null);
+            }
+        };
+
+        useEffect(() => {
+        if (selectedAnnee) {
+            fetchRetraiteSettings();
+        }
+    }, [selectedAnnee]);
+    const generatePassword = () => {
+        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+        let retVal = "";
+        for (let i = 0; i < 12; ++i) {
+            retVal += charset.charAt(Math.floor(Math.random() * charset.length));
+        }
+        setFormData({ ...formData, password: retVal });
+    };
+>>>>>>> bouray/main
 
 const verifierAgeRetraite = (dateNaissance) => {
     if (!dateNaissance || !retraiteSettings) {
@@ -1031,11 +1062,53 @@ const verifierAgeRetraite = (dateNaissance) => {
             showNotification(`L'annee ${selectedAnnee} est passee. Vous ne pouvez plus modifier les employes.`, "warning");
             return;
         }
+<<<<<<< HEAD
         setFormData(emp);
+=======
+        
+        // ⭐ Formater les dates pour l'input type="date"
+        const formatDateForInput = (dateString) => {
+            if (!dateString) return '';
+            // Si c'est déjà au format YYYY-MM-DD
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) return dateString;
+            // Sinon, extraire la partie date de l'ISO string
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            return date.toISOString().split('T')[0];
+        };
+        
+        setFormData({
+            prenom: emp.prenom || "",
+            nom: emp.nom || "",
+            email: emp.email || "",
+            telephone: emp.telephone || "",
+            date_naissance: formatDateForInput(emp.date_naissance),
+            situation_familiale: emp.situation_familiale || "",
+            nombre_enfants: emp.nombre_enfants || 0,
+            date_embauche: formatDateForInput(emp.date_embauche),
+            annee_id: emp.annee_id || "",
+            Post_id: emp.Post_id || "",
+            grade_id: emp.grade_id || "",
+            echelle_id: emp.echelle_id || "",
+            echelon_id: emp.echelon_id || "",
+            grade: emp.grade || "",
+            echelle: emp.echelle || "",
+            echelon: emp.echelon || "",
+            salaire: emp.salaire || "",
+            indice: emp.indice || "",
+            statut: emp.statut || "ACTIF",
+            cotisation_id: emp.cotisation_id || ""
+        });
+        
+>>>>>>> bouray/main
         setCurrentId(emp.id);
         setIsEdit(true);
         setErrors({});
         
+<<<<<<< HEAD
+=======
+        // Remplir les relations...
+>>>>>>> bouray/main
         if (emp.Post_id && configData?.Post) {
             const post = configData.Post.find(p => p.id === emp.Post_id);
             if (post) {
@@ -1046,7 +1119,13 @@ const verifierAgeRetraite = (dateNaissance) => {
                         setSelectedGrade(grade);
                         if (emp.echelle_id) {
                             const echelle = grade.echelles?.find(e => e.id === emp.echelle_id);
+<<<<<<< HEAD
                             setSelectedEchelle(echelle);
+=======
+                            if (echelle) {
+                                setSelectedEchelle(echelle);
+                            }
+>>>>>>> bouray/main
                         }
                     }
                 }
@@ -1054,7 +1133,24 @@ const verifierAgeRetraite = (dateNaissance) => {
         }
         
         if (emp.cotisation_id && cotisationsList.length) {
+<<<<<<< HEAD
             setSelectedCotisation(cotisationsList.find(c => c.id === emp.cotisation_id));
+=======
+            const cotisation = cotisationsList.find(c => c.id === emp.cotisation_id);
+            if (cotisation) {
+                setSelectedCotisation(cotisation);
+            }
+        }
+        
+        if (emp.credits && emp.credits.length > 0) {
+            const creditsFormatted = emp.credits.map(credit => ({
+                ...credit,
+                temp_id: credit.id || Date.now() + Math.random()
+            }));
+            setEmployeeCredits(creditsFormatted);
+        } else {
+            setEmployeeCredits([]);
+>>>>>>> bouray/main
         }
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1095,6 +1191,10 @@ const verifierAgeRetraite = (dateNaissance) => {
         }
     };
 
+<<<<<<< HEAD
+=======
+    // handlePostChange - quand on change Post
+>>>>>>> bouray/main
     const handlePostChange = (postId) => {
         if (!isYearEditable) return;
         const post = configData?.Post?.find(p => p.id === parseInt(postId));
@@ -1110,6 +1210,10 @@ const verifierAgeRetraite = (dateNaissance) => {
         });
     };
 
+<<<<<<< HEAD
+=======
+    // handleGradeChange - quand on change Grade
+>>>>>>> bouray/main
     const handleGradeChange = (gradeId) => {
         if (!isYearEditable) return;
         const grade = selectedPost?.grades?.find(g => g.id === parseInt(gradeId));
@@ -1124,6 +1228,10 @@ const verifierAgeRetraite = (dateNaissance) => {
         });
     };
 
+<<<<<<< HEAD
+=======
+    // handleEchelleChange - quand on change Echelle
+>>>>>>> bouray/main
     const handleEchelleChange = (echelleId) => {
         if (!isYearEditable) return;
         const echelle = selectedGrade?.echelles?.find(e => e.id === parseInt(echelleId));
@@ -1136,6 +1244,10 @@ const verifierAgeRetraite = (dateNaissance) => {
         });
     };
 
+<<<<<<< HEAD
+=======
+    // handleEchelonChange - quand on change Echelon
+>>>>>>> bouray/main
     const handleEchelonChange = (echelonId) => {
         if (!isYearEditable) return;
         const echelon = selectedEchelle?.echelons?.find(e => e.id === parseInt(echelonId));
@@ -1229,8 +1341,11 @@ const verifierAgeRetraite = (dateNaissance) => {
                 prenom: formData.prenom,
                 nom: formData.nom,
                 email: formData.email,
+<<<<<<< HEAD
                 password: formData.password,
                 role: formData.role,
+=======
+>>>>>>> bouray/main
                 telephone: formData.telephone || null,
                 date_naissance: formData.date_naissance || null,
                 situation_familiale: formData.situation_familiale || null,
@@ -1246,8 +1361,15 @@ const verifierAgeRetraite = (dateNaissance) => {
                 echelon: formData.echelon ? String(formData.echelon) : null,
                 salaire: formData.salaire ? parseFloat(formData.salaire) : null,
                 indice: formData.indice ? parseFloat(formData.indice) : null,
+<<<<<<< HEAD
                 statut: formData.statut || "ACTIF",
                 cotisation_id: formData.cotisation_id ? parseInt(formData.cotisation_id) : null
+=======
+                statut: formData.statut,
+                cotisation_id: formData.cotisation_id ? parseInt(formData.cotisation_id) : null,
+                password: formData.password,
+                role: formData.role,
+>>>>>>> bouray/main
             };
             
             let employeeId;
@@ -1256,7 +1378,10 @@ const verifierAgeRetraite = (dateNaissance) => {
                 employeeId = currentId;
                 showNotification("Employe modifie avec succes", "success");
             } else {
+<<<<<<< HEAD
                 console.log("Données à soumettre:", submitData);
+=======
+>>>>>>> bouray/main
                 const res = await axiosClient.post('/api/employees', submitData);
                 employeeId = res.data.id;
                 showNotification("Employe ajoute avec succes", "success");
@@ -1281,7 +1406,10 @@ const verifierAgeRetraite = (dateNaissance) => {
             resetForm();
             fetchEmployees(currentPage);
         } catch (error) {
+<<<<<<< HEAD
             console.log("Les erreurs de validation:", error.response.data.errors);
+=======
+>>>>>>> bouray/main
             console.error("Error:", error.response?.data);
             if (error.response?.data?.errors) {
                 const errors = error.response.data.errors;
@@ -1299,10 +1427,16 @@ const verifierAgeRetraite = (dateNaissance) => {
 
     const resetForm = () => {
         setFormData({
+<<<<<<< HEAD
             prenom: "", nom: "", email: "", telephone: "",password: "",role: "",
             date_naissance: "", adresse: "", situation_familiale: "", nombre_enfants: "",
             departement: "", date_embauche: "",
             type_contrat: "", annee_id: "", role_id: "", grade_id: "", echelle_id: "", echelon_id: "",
+=======
+            prenom: "", nom: "", email: "", telephone: "",
+            date_naissance: "", situation_familiale: "", nombre_enfants: "",
+            date_embauche: "", annee_id: "", Post_id: "", grade_id: "", echelle_id: "", echelon_id: "",
+>>>>>>> bouray/main
             grade: "", echelle: "", echelon: "", salaire: "", indice: "", statut: "ACTIF",
             cotisation_id: ""
         });
@@ -1388,6 +1522,7 @@ const verifierAgeRetraite = (dateNaissance) => {
     const echelles = selectedGrade?.echelles || [];
     const echelons = selectedEchelle?.echelons || [];
 
+<<<<<<< HEAD
     const generatePassword = () => {
         const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
         let retVal = "";
@@ -1839,6 +1974,447 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
         </div>
     );
 };
+=======
+
+// ============================================================
+// EMPLOYEE DETAILS MODAL - AVEC TOUS LES DÉTAILS (STYLE FORMULAIRE)
+// ============================================================
+    const EmployeeDetailsModal = ({ employee, onClose }) => {
+        const details = employee.details;
+        
+        const formatMoney = (amount) => {
+            return (amount || 0).toLocaleString() + ' MAD';
+        };
+        
+        return (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className={`${cardClass} rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl animate-fadeInUp`}>
+                    
+                    {/* HEADER */}
+                    <div className={`sticky top-0 z-10 ${cardClass} px-6 py-4 border-b ${borderClass} flex justify-between items-center bg-opacity-95 backdrop-blur-sm`}>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
+                                <Users size={18} className="text-white" />
+                            </div>
+                            <div>
+                                <h2 className={`text-lg font-bold ${textClass}`}>Fiche employé</h2>
+                                <p className={`text-xs ${textMutedClass}`}>Informations détaillées et calcul du salaire</p>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#252525] transition-all cursor-pointer">
+                            <X size={20} className={textMutedClass} />
+                        </button>
+                    </div>
+                    
+                    <div className="p-6 space-y-6">
+                        
+                        {/* ===== SECTION 1: INFOS PERSONNELLES ===== */}
+                        <div>
+                            <div className="mb-3">
+                                <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
+                                    <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
+                                    <User size={16} className="text-emerald-500" /> Informations personnelles
+                                </h3>
+                                <div className="h-px bg-gradient-to-r from-emerald-500 to-transparent mt-2"></div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass}`}>Nom complet</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.prenom} {employee.nom}</p>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass}`}>Email</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1 truncate`}>{employee.email}</p>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass}`}>Téléphone</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.telephone || '-'}</p>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass}`}>Statut</p>
+                                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                                        employee.statut === 'ACTIF' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 
+                                        employee.statut === 'CONGE' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 
+                                        'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                                    }`}>{employee.statut}</span>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass}`}>Situation familiale</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.situation_familiale || '-'}</p>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass}`}>Enfants à charge</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.nombre_enfants || '0'}</p>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass} dark:text-gray-400`}>Date de naissance</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.date_naissance ? new Date(employee.date_naissance).toLocaleDateString('fr-FR') : '-'}</p>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass} dark:text-gray-400`}>Date d'embauche</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.date_embauche ? new Date(employee.date_embauche).toLocaleDateString('fr-FR') : '-'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* ===== SECTION 2: CLASSIFICATION ===== */}
+                        <div>
+                            <div className="mb-3">
+                                <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
+                                    <div className="w-1 h-5 bg-indigo-500 rounded-full"></div>
+                                    <Briefcase size={16} className="text-indigo-500" /> Classification
+                                </h3>
+                                <div className="h-px bg-gradient-to-r from-indigo-500 to-transparent mt-2"></div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass} dark:text-gray-400`}>Poste</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.poste || employee.grade || '-'}</p>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass} dark:text-gray-400`}>Grade</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.grade || '-'}</p>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass} dark:text-gray-400`}>Echelle</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.echelle || '-'}</p>
+                                </div>
+                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <p className={`text-xs ${textMutedClass} dark:text-gray-400`}>Echelon</p>
+                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.echelon || '-'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* ===== SECTION 3: SALAIRE DE BASE + INDEMNITÉS ===== */}
+                        <div>
+                            <div className="mb-3">
+                                <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
+                                    <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
+                                    <TrendingUp size={16} className="text-blue-500" /> Salaire de base et indemnités
+                                </h3>
+                                <div className="h-px bg-gradient-to-r from-blue-500 to-transparent mt-2"></div>
+                            </div>
+                            
+                            <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
+                                <div className="flex justify-between items-center pb-2 border-b ${borderClass}">
+                                    <span className={`text-sm font-medium ${textClass}`}>Salaire de base</span>
+                                    <span className="text-sm font-semibold text-emerald-600">{formatMoney(details.baseSalary)}</span>
+                                </div>
+                                
+                                {details.appliedIndemnites.length > 0 && (
+                                    <div className="mt-3">
+                                        <p className={`text-xs ${textMutedClass} mb-2`}>Indemnités appliquées :</p>
+                                        {details.appliedIndemnites.map((ind, idx) => (
+                                            <div key={idx} className="flex justify-between items-center py-1">
+                                                <div>
+                                                    <span className={`text-sm ${textClass}`}>{ind.libelle}</span>
+                                                    <span className={`text-xs ml-2 ${textMutedClass}`}>
+                                                        ({ind.type === 'Fixe' ? 'Fixe' : `${ind.valeur}%`})
+                                                    </span>
+                                                </div>
+                                                <span className="text-sm text-blue-600">{formatMoney(ind.montant)}</span>
+                                            </div>
+                                        ))}
+                                        <div className="flex justify-between items-center mt-2 pt-2 border-t ${borderClass}">
+                                            <span className={`text-sm font-semibold ${textClass}`}>Total indemnités</span>
+                                            <span className="text-sm font-bold text-blue-600">{formatMoney(details.totalIndemnites)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div className="flex justify-between items-center mt-3 pt-2 border-t ${borderClass}">
+                                    <span className={`text-base font-bold ${textClass}`}>Salaire brut</span>
+                                    <span className="text-base font-bold text-purple-600">{formatMoney(details.brutSalary)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* ===== SECTION 4: DÉDUCTIONS ===== */}
+                        <div>
+                            <div className="mb-3">
+                                <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
+                                    <div className="w-1 h-5 bg-rose-500 rounded-full"></div>
+                                    <Shield size={16} className="text-rose-500" /> Déductions
+                                </h3>
+                                <div className="h-px bg-gradient-to-r from-rose-500 to-transparent mt-2"></div>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                
+                                {/* Cotisations */}
+                                {details.cotisations?.details?.length > 0 && (
+                                    <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800">
+                                                <Percent size={14} className="text-gray-600" />
+                                            </div>
+                                            <h4 className={`text-sm font-semibold ${textClass}`}>Cotisations sociales</h4>
+                                        </div>
+                                        {details.cotisations.details.map((cot, idx) => (
+                                            <div key={idx} className="flex justify-between items-center py-1.5 border-b ${borderClass} last:border-0">
+                                                <div>
+                                                    <span className={`text-sm ${textClass}`}>{cot.name}</span>
+                                                    <span className={`text-xs ml-2 ${textMutedClass}`}>({cot.taux}%)</span>
+                                                    {cot.organisme && <span className={`text-xs ml-2 ${textMutedClass}`}>- {cot.organisme}</span>}
+                                                </div>
+                                                <span className="text-sm text-rose-600">- {formatMoney(cot.montant)}</span>
+                                            </div>
+                                        ))}
+                                        <div className="flex justify-between items-center mt-2 pt-2 border-t ${borderClass}">
+                                            <span className={`text-sm font-semibold ${textClass}`}>Total cotisations</span>
+                                            <span className="text-sm font-bold text-rose-600">- {formatMoney(details.cotisations.total)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* IR */}
+                                <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <span className={`text-sm font-medium ${textClass}`}>IR (Impôt sur le revenu)</span>
+                                            <p className={`text-xs ${textMutedClass} mt-0.5`}>
+                                                Taux: {details.trancheIR || 0}%
+                                            </p>
+                                        </div>
+                                        <span className="text-sm font-semibold text-rose-600">- {formatMoney(details.ir)}</span>
+                                    </div>
+                                </div>
+                                
+                                {/* RCAR  */}
+                                {details.rcarTypes?.length > 0 && (
+                                    <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                                                <Shield size={14} className="text-orange-600" />
+                                            </div>
+                                            <h4 className={`text-sm font-semibold ${textClass}`}>RCAR (Retraite) - Déduction totale</h4>
+                                        </div>
+                                        
+                                        {/* Afficher TOUS les types - TOUS déduits */}
+                                        {details.rcarTypes.map((type, typeIdx) => (
+                                            <div key={typeIdx} className="mb-3 last:mb-0">
+                                                {/* En-tête du type */}
+                                                <div className="flex justify-between items-center py-1.5 px-2 rounded bg-gray-50 dark:bg-gray-800">
+                                                    <div>
+                                                        <span className={`text-sm font-medium ${textClass}`}>{type.name}</span>
+                                                        <span className="text-xs ml-2 text-gray-500">
+                                                            ({type.nature === 'salariale' ? 'Salariale' : type.nature === 'patronale' ? 'Patronale' : 'Autre'})
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-sm font-bold text-rose-600">
+                                                        - {formatMoney(type.total)}
+                                                    </span>
+                                                </div>
+                                                
+                                                {/* Détails du type */}
+                                                <div className="mt-2 space-y-1.5 pl-2">
+                                                    {type.details.map((detail, detailIdx) => (
+                                                        <div key={detailIdx} className="flex justify-between items-center">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <span className={`text-sm ${textClass}`}>{detail.name}</span>
+                                                                    <span className={`text-xs ${textMutedClass}`}>(Taux: {detail.taux}%)</span>
+                                                                    {detail.plafond > 0 && (
+                                                                        <span className={`text-xs ${textMutedClass}`}>
+                                                                            Plafond: {formatMoney(detail.plafond)}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className={`text-xs ${textMutedClass} mt-0.5`}>
+                                                                    Base: {formatMoney(detail.baseCalcul)}
+                                                                    {detail.baseCalcul < detail.plafond && detail.plafond > 0 && (
+                                                                        <span className="ml-1">(salaire &lt; plafond)</span>
+                                                                    )}
+                                                                    {detail.baseCalcul === detail.plafond && detail.plafond > 0 && (
+                                                                        <span className="ml-1">(plafond atteint)</span>
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                            <span className="text-sm font-semibold text-rose-600 whitespace-nowrap ml-3">
+                                                                - {formatMoney(detail.montant)}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        
+                                        {/* Total RCAR déduit */}
+                                        <div className="mt-3 pt-3 border-t ${borderClass}">
+                                            <div className="flex justify-between items-center">
+                                                <span className={`text-sm font-semibold ${textClass}`}>Total RCAR (déduit du salaire)</span>
+                                                <span className="text-base font-bold text-rose-600">- {formatMoney(details.rcarTotalSalariale + details.rcarTotalPatronale + details.rcarTotalAutres)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* SNTL */}
+                                {details.sntl?.details?.length > 0 && (
+                                    <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                                                <Shield size={14} className="text-amber-600" />
+                                            </div>
+                                            <h4 className={`text-sm font-semibold ${textClass}`}>SNTL</h4>
+                                        </div>
+                                        {details.sntl.details.map((sntlItem, idx) => (
+                                            <div key={idx} className="flex justify-between items-center py-1.5 border-b ${borderClass} last:border-0">
+                                                <div>
+                                                    <span className={`text-sm ${textClass}`}>{sntlItem.label}</span>
+                                                    <span className={`text-xs ml-2 ${textMutedClass}`}>
+                                                        ({sntlItem.type === 'fixe' ? `${sntlItem.valeur} MAD` : `${sntlItem.valeur}%`})
+                                                    </span>
+                                                    {sntlItem.categorie_cible === 'cadres' && (
+                                                        <span className="text-xs ml-2 text-blue-500">(Ciblé)</span>
+                                                    )}
+                                                </div>
+                                                <span className="text-sm text-rose-600">- {formatMoney(sntlItem.montant)}</span>
+                                            </div>
+                                        ))}
+                                        <div className="flex justify-between items-center mt-2 pt-2 border-t ${borderClass}">
+                                            <span className={`text-sm font-semibold ${textClass}`}>Total SNTL</span>
+                                            <span className="text-sm font-bold text-rose-600">- {formatMoney(details.sntl.total)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Assurances sociales */}
+                                {details.assurancesDetails?.length > 0 && (
+                                    <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                                <Shield size={14} className="text-blue-600" />
+                                            </div>
+                                            <h4 className={`text-sm font-semibold ${textClass}`}>Assurances sociales</h4>
+                                        </div>
+                                        {details.assurancesDetails.map((ass, idx) => (
+                                            <div key={idx} className="flex justify-between items-center py-1.5 border-b last:border-0">
+                                                <div>
+                                                    <span className={`text-sm ${textClass}`}>{ass.name}</span>
+                                                    <span className={`text-xs ml-2 ${textMutedClass}`}>
+                                                        (Taux total: {ass.taux_employeur + ass.taux_salarie}%)
+                                                    </span>
+                                                    {ass.plafond && (
+                                                        <p className={`text-xs ${textMutedClass} mt-0.5`}>Plafond: {formatMoney(ass.plafond)}</p>
+                                                    )}
+                                                </div>
+                                                <div className="text-right">
+                                                    {ass.montant_salarie > 0 && (
+                                                        <div className="text-rose-600 text-sm">- {formatMoney(ass.montant_salarie)}</div>
+                                                    )}
+                                                    {ass.montant_employeur > 0 && (
+                                                        <div className="text-emerald-600 text-[10px]">+ {formatMoney(ass.montant_employeur)} (employeur)</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                                            <span className={`text-sm font-semibold ${textClass}`}>Total déduit</span>
+                                            <span className="text-sm font-bold text-rose-600">- {formatMoney(details.assurancesSalarie)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Crédits */}
+                                {details.credits?.details?.length > 0 && (
+                                    <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                                                <DollarSign size={14} className="text-purple-600" />
+                                            </div>
+                                            <h4 className={`text-sm font-semibold ${textClass}`}>Crédits en cours</h4>
+                                        </div>
+                                        {details.credits.details.map((credit, idx) => (
+                                            <div key={idx} className="py-2 border-b ${borderClass} last:border-0">
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <span className={`text-sm font-medium ${textClass}`}>{credit.name}</span>
+                                                        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                                                            <span className={`text-xs ${textMutedClass}`}>Taux: {credit.interest_rate}%</span>
+                                                            <span className={`text-xs ${textMutedClass}`}>Montant: {formatMoney(credit.max_amount)}</span>
+                                                            <span className={`text-xs ${textMutedClass}`}>Durée: {credit.max_duration} mois</span>
+                                                            {credit.date_debut && (
+                                                                <span className={`text-xs ${textMutedClass}`}>
+                                                                    {new Date(credit.date_debut).toLocaleDateString('fr-FR')} → {credit.date_fin ? new Date(credit.date_fin).toLocaleDateString('fr-FR') : '-'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {credit.mensualite && (
+                                                            <p className={`text-xs ${textMutedClass} mt-1`}>
+                                                                Mensualité: <span className="font-semibold text-emerald-600">{formatMoney(credit.mensualite)}</span>
+                                                            </p>
+                                                        )}
+                                                        {credit.reste_a_payer && (
+                                                            <div className="mt-2">
+                                                                <div className="flex justify-between text-xs mb-1">
+                                                                    <span className={`text-xs ${textMutedClass}`}>Remboursement</span>
+                                                                    <span className={`text-xs ${textClass}`}>{credit.pourcentage_rembourse || 0}%</span>
+                                                                </div>
+                                                                <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-emerald-500 rounded-full" style={{width: `${credit.pourcentage_rembourse || 0}%`}} />
+                                                                </div>
+                                                                <p className={`text-xs ${textMutedClass} mt-1`}>
+                                                                    Reste à payer: {formatMoney(credit.reste_a_payer)}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-rose-600 whitespace-nowrap ml-3">
+                                                        - {formatMoney(credit.montant)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="flex justify-between items-center mt-3 pt-2 border-t ${borderClass}">
+                                            <div>
+                                                <span className={`text-sm font-semibold ${textClass}`}>Total mensualités crédits</span>
+                                                <p className={`text-xs ${textMutedClass}`}>Déduit mensuellement</p>
+                                            </div>
+                                            <span className="text-base font-bold text-rose-600">- {formatMoney(details.credits.total)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Total général des déductions */}
+                                <div className={`p-4 rounded-lg ${cardClass} border ${borderClass} bg-gray-50 dark:bg-gray-800`}>
+                                    <div className="flex justify-between items-center">
+                                        <span className={`text-base font-bold ${textClass}`}>Total des déductions</span>
+                                        <span className="text-base font-bold text-rose-600">- {formatMoney(details.totalDeductions)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* ===== SECTION 5: SALAIRE NET ===== */}
+                        <div>
+                            <div className={`p-5 rounded-xl border-2 ${darkMode ? 'border-indigo-800 bg-indigo-950/20' : 'border-indigo-200 bg-indigo-50'}`}>
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <span className={`text-lg font-bold ${textClass}`}>Salaire net à payer</span>
+                                        <p className={`text-xs ${textMutedClass} mt-0.5`}>Après toutes déductions</p>
+                                    </div>
+                                    <span className={`text-2xl font-bold ${darkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{formatMoney(details.netSalary)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* ===== BOUTON FERMER ===== */}
+                        <div className="flex gap-3 pt-4 border-t ${borderClass}">
+                            <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:from-indigo-700 hover:to-purple-700 transition-all cursor-pointer">
+                                Fermer
+                            </button>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        );
+    };
+>>>>>>> bouray/main
 
 
 
@@ -1984,6 +2560,7 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                                 </div>
                             </div>
 
+<<<<<<< HEAD
                             {/* ===== SECTION ACCÈS & SÉCURITÉ ===== */}
                             <div className="mt-6">
                             <div className="mb-3">
@@ -2046,6 +2623,8 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                             </div>
                             </div>
 
+=======
+>>>>>>> bouray/main
                             <div className="pt-4 mb-4">
                                 <div className="mb-3">
                                     <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
@@ -2087,7 +2666,11 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                                         <label className={`text-xs font-medium  ${textMutedClass}  mb-1 block`}>Credits</label>
                                         <button type="button"
                                             onClick={() => setShowCreditForm(!showCreditForm)}
+<<<<<<< HEAD
                                             className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all cursor-pointer">
+=======
+                                            className="flex items-center gap-1 px-4 py-2.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all cursor-pointer">
+>>>>>>> bouray/main
                                             <Plus size={12} /> Ajouter un credit
                                         </button>
                                     </div>
@@ -2216,6 +2799,71 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                                         </div>
                                     )}
                                 </div>
+<<<<<<< HEAD
+=======
+                                 {/* ===== SECTION SÉCURITÉ & ACCÈS (AJOUTÉE) ===== */}
+    <div className="mt-6">
+        <div className="mb-3">
+            <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
+                <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
+                <Lock size={16} className="text-blue-500" /> Sécurité & Accès
+            </h3>
+            <div className="h-px bg-gradient-to-r from-blue-500 to-transparent mt-2"></div>
+        </div>
+        <div className={`p-5 rounded-xl ${cardClass} border ${borderClass} space-y-4`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center border-b pb-4 border-gray-200 dark:border-gray-700">
+                <label className={`text-sm font-medium ${textClass}`}>Rôle Système</label>
+                <select
+                    name="role"
+                    value={formData.role || ""}
+                    onChange={handleChange}
+                    className={`w-full p-2 rounded-lg border bg-transparent ${borderClass} ${textClass} focus:ring-2 focus:ring-blue-500/20`}
+                >
+                    <option value="">Sélectionner un rôle</option>
+                    <option value="employee">Employé</option>
+                    <option value="rh">RH</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className={`block text-xs mb-1 ${textMutedClass}`}>Adresse Email Professionnelle</label>
+                    <input 
+                        type="email" 
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="ex: a.alami@company.com"
+                        className={`w-full p-2.5 rounded-lg border bg-transparent ${borderClass} ${textClass}`}
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className={`block text-xs mb-1 ${textMutedClass}`}>Mot de passe</label>
+                    <div className="relative">
+                        <input 
+                            type="text"
+                            name="password"
+                            value={formData.password || ""}
+                            onChange={handleChange}
+                            className={`w-full p-2.5 pr-24 rounded-lg border bg-transparent ${borderClass} ${textClass} font-mono text-sm`}
+                            placeholder="Générer un mot de passe"
+                        />
+                        <button 
+                            type="button"
+                            onClick={generatePassword}
+                            className="absolute right-1 top-1 bottom-1 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1"
+                        >
+                            Générer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+>>>>>>> bouray/main
                             </div>
 
                             <button type="submit" disabled={loading} className="cursor-pointer w-full py-3 bg-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25">
@@ -2265,7 +2913,11 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                                                         <div className={`font-medium text-sm ${textClass}`}>{emp.prenom} {emp.nom}</div>
                                                         <div className={`text-xs ${textMutedClass} truncate max-w-[150px]`}>{emp.email}</div>
                                                     </td>
+<<<<<<< HEAD
                                                     <td className={`p-3 text-sm ${textClass} hidden md:table-cell`}>{emp.poste || '-'}</td>
+=======
+                                                    <td className={`p-3 text-sm ${textClass} hidden md:table-cell`}>{emp.post?.name || '-'}</td>
+>>>>>>> bouray/main
                                                     <td className={`p-3 text-sm ${textClass} hidden lg:table-cell`}>{emp.grade || '-'}</td>
                                                     <td className={`p-3 text-sm ${textClass} hidden xl:table-cell`}>{emp.echelle || '-'}</td>
                                                     <td className={`p-3 text-sm ${textClass} hidden xl:table-cell`}>{emp.echelon || '-'}</td>
@@ -2353,7 +3005,11 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
                                     <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
                                         <div>
                                             <p className={textMutedClass}>Poste</p>
+<<<<<<< HEAD
                                             <p className={textClass}>{emp.poste || '-'}</p>
+=======
+                                            <p className={textClass}>{emp.post?.name || '-'}</p>
+>>>>>>> bouray/main
                                         </div>
                                         <div>
                                             <p className={textMutedClass}>Grade</p>

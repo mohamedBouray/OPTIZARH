@@ -11,9 +11,12 @@ use App\Models\SuperAdmin\Cotisation;
 
 class CotisationController extends Controller
 {
+<<<<<<< HEAD
     /**
      * Get cotisations configuration for a year
      */
+=======
+>>>>>>> bouray/main
     public function index(Request $request)
     {
         try {
@@ -56,9 +59,12 @@ class CotisationController extends Controller
         }
     }
 
+<<<<<<< HEAD
     /**
      * Store cotisations configuration
      */
+=======
+>>>>>>> bouray/main
     public function store(Request $request)
     {
         try {
@@ -73,7 +79,10 @@ class CotisationController extends Controller
             
             DB::beginTransaction();
             
+<<<<<<< HEAD
             // Delete old configuration
+=======
+>>>>>>> bouray/main
             Organisme::where('annee', $year)->delete();
 
             $orgCount = 0;
@@ -126,9 +135,12 @@ class CotisationController extends Controller
         }
     }
 
+<<<<<<< HEAD
     /**
      * Delete an organisme
      */
+=======
+>>>>>>> bouray/main
     public function destroyOrganisme($id)
     {
         try {
@@ -149,9 +161,12 @@ class CotisationController extends Controller
         }
     }
 
+<<<<<<< HEAD
     /**
      * Delete a rubrique (cotisation)
      */
+=======
+>>>>>>> bouray/main
     public function destroyRubrique($id)
     {
         try {
@@ -171,9 +186,12 @@ class CotisationController extends Controller
         }
     }
 
+<<<<<<< HEAD
     /**
      * Toggle favorite status and propagate to all years
      */
+=======
+>>>>>>> bouray/main
     public function toggleFavorite(Request $request, $id)
     {
         try {
@@ -244,9 +262,12 @@ class CotisationController extends Controller
         }
     }
 
+<<<<<<< HEAD
     /**
      * Get years that have cotisations data
      */
+=======
+>>>>>>> bouray/main
     public function getYearsWithData()
     {
         try {

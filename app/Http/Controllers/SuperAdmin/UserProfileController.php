@@ -11,17 +11,24 @@ use App\Models\Auth\User;
 
 class UserProfileController extends Controller
 {
+<<<<<<< HEAD
     /**
      * Jib data dyal l-user melli kat-lancer l-page Settings
      */
+=======
+
+>>>>>>> bouray/main
     public function show(Request $request)
     {
         return response()->json($request->user());
     }
 
+<<<<<<< HEAD
     /**
      * Update Profile (General Settings)
      */
+=======
+>>>>>>> bouray/main
     public function updateProfile(Request $request)
     {
         $user = $request->user();
@@ -37,7 +44,10 @@ class UserProfileController extends Controller
             'language' => ['required', Rule::in(['en', 'fr', 'ar'])],
         ]);
 
+<<<<<<< HEAD
         // 2. Update f l-Base de données
+=======
+>>>>>>> bouray/main
         $user->update($validated);
 
         return response()->json([
@@ -54,7 +64,11 @@ class UserProfileController extends Controller
     {
         $user = $request->user();
 
+<<<<<<< HEAD
         // 1. Validation d l-passwords
+=======
+ 
+>>>>>>> bouray/main
         $request->validate([
             'current_password' => 'required|string',
             'new_password'     => ['required', 'confirmed', Password::defaults()],
@@ -68,7 +82,11 @@ class UserProfileController extends Controller
             ], 422);
         }
 
+<<<<<<< HEAD
         // 3. Hash w Save l-password jdida
+=======
+
+>>>>>>> bouray/main
         $user->update([
             'password' => Hash::make($request->new_password)
         ]);

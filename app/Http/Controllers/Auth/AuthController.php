@@ -83,6 +83,7 @@ class AuthController extends Controller{
         $request->user()->sendEmailVerificationNotification();
         return response()->json(['status' => 'verification-link-sent']);
     }
+<<<<<<< HEAD
 public function userStatus(Request $request)
 {
     // fresh() darouri bach i-jib l-état jdid mn database machi mn session
@@ -100,6 +101,22 @@ public function userStatus(Request $request)
 }
 // F-west AuthController.php
 
+=======
+    public function userStatus(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        return response()->json([
+            'email_verified_at' => $user->fresh()->email_verified_at,
+            'user' => $user->fresh(),
+            'role' => $user->role
+        ]);
+    }
+>>>>>>> bouray/main
     public function updatePasswordFirst(Request $request) {
         $request->validate([
             'password' => 'required|string|min:8|confirmed',

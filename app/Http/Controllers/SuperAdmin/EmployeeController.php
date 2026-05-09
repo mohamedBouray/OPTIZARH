@@ -3,13 +3,22 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use Illuminate\Http\Request;
 use App\Models\SuperAdmin\Employee;
+<<<<<<< HEAD
 use App\Models\Auth\User;
+=======
+>>>>>>> bouray/main
 use App\Models\SuperAdmin\SalaryYear;
 use App\Models\SuperAdmin\EmployeeCredit;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+=======
+use App\Models\Auth\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+>>>>>>> bouray/main
 
 class EmployeeController extends Controller
 {
@@ -57,7 +66,10 @@ class EmployeeController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> bouray/main
     public function index(Request $request)
     {
         try {
@@ -80,6 +92,7 @@ class EmployeeController extends Controller
                 $query->where('statut', $request->statut);
             }
 
+<<<<<<< HEAD
             $employees = $query->select([
                 'employees.*',
                 'credit_type_id',
@@ -97,6 +110,17 @@ class EmployeeController extends Controller
                 'READ',
                 'Affichage de la liste des employés (Page ' . ($request->page ?? 1) . ')'
             );
+=======
+            $employees = $query->with(['post', 'gradeRel', 'echelleRel', 'echelonRel'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+            
+            $employees->getCollection()->transform(function ($employee) {
+                $employee->date_naissance = $employee->date_naissance ? date('Y-m-d', strtotime($employee->date_naissance)) : null;
+                $employee->date_embauche = $employee->date_embauche ? date('Y-m-d', strtotime($employee->date_embauche)) : null;
+                return $employee;
+            });
+>>>>>>> bouray/main
             
             return response()->json($employees);
         } catch (\Exception $e) {
@@ -104,6 +128,7 @@ class EmployeeController extends Controller
         }
     }
 
+<<<<<<< HEAD
 
 public function store(Request $request)
 {
@@ -205,6 +230,109 @@ public function store(Request $request)
         return response()->json(['message' => $e->getMessage()], 500);
     }
 }
+=======
+    public function store(Request $request)
+    {
+        try {
+            // 1. Validation (Zdna email unique f table users w l-champs jdad)
+            $validated = $request->validate([
+                'prenom' => 'required|string|max:255',
+                'nom' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email', // Check f table users hsen
+                'password' => 'required|min:6', // Password darouri
+                'role' => 'required|string|in:employee,rh,admin',    // RH wala EMPLOYE
+                'telephone' => 'nullable|string|max:20',
+                'date_naissance' => 'nullable|date',
+                'adresse' => 'nullable|string',
+                'situation_familiale' => 'nullable|string',
+                'nombre_enfants' => 'nullable|integer|min:0|max:20',
+                'departement' => 'nullable|string',
+                'date_embauche' => 'nullable|date',
+                'type_contrat' => 'nullable|string',
+                'annee_id' => 'required|exists:salary_years,id',
+                'Post_id' => 'nullable|exists:Post,id',
+                'grade_id' => 'nullable|exists:grades,id',
+                'echelle_id' => 'nullable|exists:echelles,id',
+                'echelon_id' => 'nullable|exists:echelons,id',
+                'grade' => 'nullable|string',
+                'echelle' => 'nullable|string',
+                'echelon' => 'nullable|string',  
+                'salaire' => 'nullable|numeric|min:0',
+                'indice' => 'nullable|numeric|min:0',
+                'statut' => 'nullable|string|in:ACTIF,CONGÉ,DÉPART',
+                'cotisation_type' => 'nullable|string',
+                'cotisation_id' => 'required|integer', 
+                'cotisation_rubrique_id' => 'nullable|integer',
+                'cotisation_label' => 'nullable|string',
+                'cotisation_taux' => 'nullable|numeric|min:0|max:100',
+                'rcar_type_id' => 'nullable|exists:rcar_types,id',
+                'rcar_type_label' => 'nullable|string|max:255',
+                'rcar_taux' => 'nullable|numeric|min:0|max:100',
+                // Champs crédit
+                'credit_type_id' => 'nullable|exists:credit_types,id',
+                'montant_credit' => 'nullable|numeric|min:0',
+                'taux_credit' => 'nullable|numeric|min:0|max:100',
+                'credit_duree' => 'nullable|integer|min:1|max:360',
+                'credit_date_debut' => 'nullable|date',
+                'credit_date_fin' => 'nullable|date|after_or_equal:credit_date_debut',
+                'credit_mensualite' => 'nullable|numeric|min:0',
+                'credit_reste_a_payer' => 'nullable|numeric|min:0'
+            ]);
+
+            // Asta3mel DB::transaction bach ila whlat chi haja, may-creeyach user bla employé
+            $employee = DB::transaction(function () use ($validated, $request) {
+                
+                // 2. Création de l'utilisateur (Le compte login)
+                $user = User::create([
+                    'full_name' => $validated['prenom'] . ' ' . $validated['nom'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($request->password),
+                    'role' => $request->role,
+                    'company_name' => null,
+                    'sector' => null,
+                    'must_change_password' => true
+                ]);
+
+                // 3. Traitement des calculs (Kima derti)
+                if (isset($validated['echelon'])) {
+                    $validated['echelon'] = (string) $validated['echelon'];
+                }
+
+                if (isset($validated['montant_credit'], $validated['taux_credit'], $validated['credit_duree'])) {
+                    if (!isset($validated['credit_mensualite']) || $validated['credit_mensualite'] == 0) {
+                        $validated['credit_mensualite'] = $this->calculerMensualiteCredit(
+                            $validated['montant_credit'], $validated['taux_credit'], $validated['credit_duree']
+                        );
+                    }
+                    if (!isset($validated['credit_reste_a_payer'])) {
+                        $validated['credit_reste_a_payer'] = $validated['montant_credit'];
+                    }
+                }
+
+                if (isset($validated['credit_date_debut'], $validated['credit_duree']) && !isset($validated['credit_date_fin'])) {
+                    $dateFin = (new \DateTime($validated['credit_date_debut']))->modify('+' . $validated['credit_duree'] . ' months');
+                    $validated['credit_date_fin'] = $dateFin->format('Y-m-d');
+                }
+
+                // 4. Création de l'employé lié au User ID
+                $validated['user_id'] = $user->id; // Hna katrebet-hom
+                return Employee::create($validated);
+            });
+
+            // 5. Logging
+            $this->logActivity('Ajout employé', 'CREATE', "Ajout de l'employé : {$employee->prenom} {$employee->nom}");
+
+            return response()->json($employee, 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            $this->logActivity('Ajout employé', 'ERROR', "Erreur: " . $e->getMessage());
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+>>>>>>> bouray/main
     public function show($id)
     {
         try {
@@ -243,10 +371,16 @@ public function store(Request $request)
                 'adresse' => 'nullable|string|max:500',
                 'situation_familiale' => 'nullable|string|max:50',
                 'nombre_enfants' => 'nullable|integer|min:0|max:20',
+<<<<<<< HEAD
                 'departement' => 'nullable|string|max:100',
                 'date_embauche' => 'nullable|date',
                 
                 'type_contrat' => 'nullable|string|max:50',
+=======
+                // 'departement' => 'nullable|string|max:100',
+                'date_embauche' => 'nullable|date',
+                // 'type_contrat' => 'nullable|string|max:50',
+>>>>>>> bouray/main
                 'annee_id' => 'sometimes|exists:salary_years,id',
                 'Post_id' => 'nullable|exists:Post,id',
                 'grade_id' => 'nullable|exists:grades,id',
@@ -266,7 +400,10 @@ public function store(Request $request)
                 'rcar_type_id' => 'nullable|exists:rcar_types,id',
                 'rcar_type_label' => 'nullable|string|max:255',
                 'rcar_taux' => 'nullable|numeric|min:0|max:100',
+<<<<<<< HEAD
                 // Champs crédit
+=======
+>>>>>>> bouray/main
                 'credit_type_id' => 'nullable|exists:credit_types,id',
                 'montant_credit' => 'nullable|numeric|min:0',
                 'taux_credit' => 'nullable|numeric|min:0|max:100',
@@ -284,8 +421,11 @@ public function store(Request $request)
             $request->validate($rules);
             
             $data = $request->all();
+<<<<<<< HEAD
             
             // Recalculer la mensualité si les données du crédit changent
+=======
+>>>>>>> bouray/main
             if (isset($data['montant_credit']) || isset($data['taux_credit']) || isset($data['credit_duree'])) {
                 $montant = $data['montant_credit'] ?? $employee->montant_credit;
                 $taux = $data['taux_credit'] ?? $employee->taux_credit;
@@ -330,7 +470,11 @@ public function store(Request $request)
         }
     }
 
+<<<<<<< HEAD
  public function destroy($id)
+=======
+   public function destroy($id)
+>>>>>>> bouray/main
 {
     try {
         $employee = Employee::find($id);
@@ -512,7 +656,10 @@ public function addCredit(Request $request, $employeeId)
             'description' => 'nullable|string'
         ]);
         
+<<<<<<< HEAD
         // Calculer la mensualité si non fournie
+=======
+>>>>>>> bouray/main
         if (!isset($validated['credit_mensualite']) || $validated['credit_mensualite'] == 0) {
             $validated['credit_mensualite'] = $this->calculerMensualiteCredit(
                 $validated['montant_credit'],
@@ -521,7 +668,10 @@ public function addCredit(Request $request, $employeeId)
             );
         }
         
+<<<<<<< HEAD
         // Calculer la date de fin si non fournie
+=======
+>>>>>>> bouray/main
         if (!isset($validated['credit_date_fin']) && isset($validated['credit_date_debut'])) {
             $dateDebut = new \DateTime($validated['credit_date_debut']);
             $dateFin = clone $dateDebut;
@@ -529,7 +679,11 @@ public function addCredit(Request $request, $employeeId)
             $validated['credit_date_fin'] = $dateFin->format('Y-m-d');
         }
         
+<<<<<<< HEAD
         // Initialiser le reste à payer
+=======
+
+>>>>>>> bouray/main
         if (!isset($validated['credit_reste_a_payer'])) {
             $validated['credit_reste_a_payer'] = $validated['montant_credit'];
         }
