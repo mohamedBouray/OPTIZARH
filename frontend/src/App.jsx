@@ -42,12 +42,14 @@ import SNTL from './routes/superadmin/SNTL';
 import AssuranceManagement from './routes/superadmin/AssuranceManagement';
 import Logs from "./routes/superadmin/Logs";
 import Parametres from './routes/superadmin/Parametres';
+import Demandes from './routes/superadmin/Demande';
 
 // Admin Components
 import AdminDashboard from './routes/Admin/Dashboard';
 
 // RH Components
 import RHDashboard from './routes/Rh/Dashboard';
+import RHDemande from './routes/RH/Demande';
 
 // Employee Components
 import EmployeeDashboard from './routes/employee/Dashboard';
@@ -217,6 +219,7 @@ function AppContent() {
                         <Route path="/SuperAdmin/SNTL" element={<SNTL />} />
                         <Route path="/SuperAdmin/assurances" element={<AssuranceManagement />} />
                         <Route path="/SuperAdmin/Logs" element={<Logs />} />
+                        <Route path="/SuperAdmin/Demande" element={<Demandes />} />
                     </Route>
                 </Route>
 
@@ -231,6 +234,7 @@ function AppContent() {
                 <Route element={<ProtectedRoute allowedRoles={['rh']} />}>
                     <Route element={<Layout />}>
                         <Route path="/RH/Dashboard" element={<RHDashboard />} />
+                        <Route path="/RH/Demande" element={<RHDemande />} />
                     </Route>
                 </Route>
 

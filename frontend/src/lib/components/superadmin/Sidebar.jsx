@@ -26,6 +26,7 @@ export default function Sidebar({ onLinkClick, isMobile }) {
                 { label: "Retraite", icon: <GraduationCap size={20} />, path: "/SuperAdmin/Retraite" },
                 { label: "Assurances", icon: <Hospital size={20} />, path: "/SuperAdmin/assurances" },
                 { label: "SNTL", icon: <Truck size={20} />, path: "/SuperAdmin/SNTL" },
+                {label: "Demandes", icon: <FileText size={20} />, path: "/SuperAdmin/Demande" },
             ]
         },
         admin: {
@@ -36,6 +37,7 @@ export default function Sidebar({ onLinkClick, isMobile }) {
         rh: {
             main: [
                 { label: "Tableau de bord", icon: <LayoutDashboard size={20} />, path: "/RH/Dashboard" },
+                { label: "Demandes", icon: <FileText size={20} />, path: "/RH/Demande" },
             ]
         },
         employee: {

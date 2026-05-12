@@ -135,4 +135,8 @@ class Employee extends Model
     {
         return $query->where('annee_id', $anneeId);
     }
+
+    public function leaveRequests() {
+        return $this->hasMany(\App\Models\Employe\LeaveRequest::class);
+    }
 }

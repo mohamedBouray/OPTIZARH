@@ -23,7 +23,11 @@ use App\Http\Controllers\SuperAdmin\RetraiteController;
 use App\Http\Controllers\SuperAdmin\AssuranceController;
 use App\Http\Controllers\SuperAdmin\ActivityLogController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
+use App\Http\Controllers\SuperAdmin\LeaveConfigController;
 
+
+//Employe Controller
+use App\Http\Controllers\Employe\LeaveRequestController;
 
 
 Route::get('/check-setup', [SuperAdminController::class, 'checkStatus']);
@@ -64,15 +68,22 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware(['throttle:6,1'])
         ->name('verification.send');
 
+    
+    Route::get('/salary-years', function () {
+        return \App\Models\SuperAdmin\SalaryYear::orderBy('year', 'asc')->get();
+    });
+
+    Route::get('/leave-types/{year}', [LeaveConfigController::class, 'getTypesByYear']);
+
+    Route::get('/leave-config/full/{yearId}', [LeaveConfigController::class, 'getFullConfig']);
+    
     Route::get('/my-salary', [EmployeeController::class, 'mySalary']);
+    
     Route::get('/employees/{id}/salary-dashboard', [EmployeeController::class, 'salaryDashboard']);
 
     Route::middleware(['verified'])->group(function () {
         Route::middleware('role:superadmin')->group(function () {
 
-            Route::get('/salary-years', function () {
-                return \App\Models\SuperAdmin\SalaryYear::orderBy('year', 'asc')->get();
-            });
             Route::get('/superadmin/dashboard-stats', [DashboardController::class, 'getStats']);
             
             Route::prefix('employees')->group(function () {
@@ -203,20 +214,32 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::patch('/admin/users/{id}/toggle-block', [SettingsController::class, 'toggleBlock']);
             });
 
+            //Demandes
+            Route::prefix('leave-config')->group(function () {
+                Route::post('/save-category', [LeaveConfigController::class, 'saveCategory']);
+                Route::post('/types', [LeaveConfigController::class, 'storeType']); // Hada kiy-3iyét l- storeType()
+                Route::delete('/types/{id}', [LeaveConfigController::class, 'destroyType']);
+                Route::delete('/categories/{id}', [LeaveConfigController::class, 'destroyCategory']);
+            });
+
+        });
+        // Role: Admin
+        Route::middleware('role:admin')->group(function () {});
+        // Role: RH
+        Route::middleware('role:rh')->group(function () { 
+            Route::prefix('hr/leaves')->group(function () {
+                Route::get('/all', [LeaveRequestController::class, 'allRequests']);
+                Route::post('/update-status/{id}', [LeaveRequestController::class, 'updateStatus']);
+            });
         });
 
-        
-        Route::middleware('role:employee')->group(function () { 
+        // Role: Employee
+        Route::middleware('role:employee')->group(function () {
+            Route::prefix('leave-requests')->group(function () {
+                Route::get('/my-history', [LeaveRequestController::class, 'myRequests']);
+                Route::post('/store', [LeaveRequestController::class, 'store']);
+                Route::get('/balance', [LeaveRequestController::class, 'getLeaveStats']);
+            });
         });
-
-        
-        Route::middleware('role:admin')->group(function () { 
-
-        });
-
-        Route::middleware('role:rh')->group(function () {
-
-         });
-
     });
 });
