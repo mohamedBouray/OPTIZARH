@@ -6,6 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
+<<<<<<< HEAD
+    protected $fillable = [
+        'prenom', 'nom', 'email', 'telephone', 'date_naissance', 'adresse','user_id',
+        'situation_familiale', 'nombre_enfants', 'departement', 'date_embauche', 'poste', 'type_contrat',
+        'annee_id', 'role_id', 'grade_id', 'echelle_id', 'echelon_id',
+        'grade', 'echelle', 'echelon', 'salaire', 'indice', 'statut',
+        'cotisation_type', 'cotisation_id', 'cotisation_rubrique_id', 'cotisation_label', 'cotisation_taux',
+        'rcar_type_id', 'rcar_type_label', 'rcar_taux', 
+        'credit_type_id', 'montant_credit', 'taux_credit',
+        'credit_duree', 'credit_date_debut', 'credit_date_fin', 'credit_mensualite', 'credit_reste_a_payer'
+=======
     protected $table = 'employees';
     
     protected $fillable = [
@@ -39,8 +50,12 @@ class Employee extends Model
         'credentials_sent_at' => 'datetime'
     ];
 
+<<<<<<< HEAD
+=======
+    // ⭐ Appended attributes
     protected $appends = ['poste_name', 'grade_name', 'echelle_name', 'echelon_name', 'statut_display', 'full_name'];
 
+    // ⭐ Accessors
     public function getPosteNameAttribute()
     {
         return $this->post ? $this->post->name : null;
@@ -70,12 +85,16 @@ class Employee extends Model
         }
     }
 
+>>>>>>> bouray/main
     public function getFullNameAttribute()
     {
         return $this->prenom . ' ' . $this->nom;
     }
 
-    //  Relations
+<<<<<<< HEAD
+=======
+    // ⭐ Relations
+>>>>>>> bouray/main
     public function annee()
     {
         return $this->belongsTo(SalaryYear::class, 'annee_id');
@@ -86,17 +105,29 @@ class Employee extends Model
         return $this->belongsTo(Post::class, 'Post_id');
     }
 
+<<<<<<< HEAD
+    public function grade()
+=======
     public function gradeRel()
+>>>>>>> bouray/main
     {
         return $this->belongsTo(Grade::class, 'grade_id');
     }
 
+<<<<<<< HEAD
+    public function echelle()
+=======
     public function echelleRel()
+>>>>>>> bouray/main
     {
         return $this->belongsTo(Echelle::class, 'echelle_id');
     }
 
+<<<<<<< HEAD
+    public function echelon()
+=======
     public function echelonRel()
+>>>>>>> bouray/main
     {
         return $this->belongsTo(Echelon::class, 'echelon_id');
     }
@@ -106,6 +137,26 @@ class Employee extends Model
         return $this->belongsTo(RcarType::class, 'rcar_type_id');
     }
 
+<<<<<<< HEAD
+
+public function credits()
+{
+    return $this->hasMany(EmployeeCredit::class, 'employee_id');
+}
+
+// ⭐ Les crédits actifs seulement
+public function creditsActifs()
+{
+    return $this->hasMany(EmployeeCredit::class, 'employee_id')->where('statut', 'ACTIF');
+}
+
+// ⭐ Calculer le total des mensualités
+public function getTotalMensualitesCreditsAttribute()
+{
+    return $this->creditsActifs->sum('credit_mensualite');
+}
+
+=======
     public function credits()
     {
         return $this->hasMany(EmployeeCredit::class, 'employee_id');
@@ -120,13 +171,17 @@ class Employee extends Model
     {
         return $this->creditsActifs->sum('credit_mensualite');
     }
+>>>>>>> bouray/main
 
     public function creditType()
     {
         return $this->belongsTo(CreditType::class, 'credit_type_id');
     }
 
-    //  Scopes
+<<<<<<< HEAD
+=======
+    // ⭐ Scopes
+>>>>>>> bouray/main
     public function scopeActif($query)
     {
         return $query->where('statut', 'ACTIF');

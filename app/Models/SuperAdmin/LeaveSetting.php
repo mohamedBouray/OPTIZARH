@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Models\SuperAdmin;
+
+use Illuminate\Database\Eloquent\Model;
+use App\Models\SuperAdmin\SalaryYear;
+
+class LeaveSetting extends Model
+{
+    protected $fillable = [
+        'salary_year_id',
+        'category_name',
+        'annual_global_max',
+    ];
+
+    // Rabt m3a l-3am
+    public function salaryYear(){
+        return $this->belongsTo(SalaryYear::class);
+    }
+
+    public function types(){
+        return $this->hasMany(LeaveType::class, 'leave_category_id');
+    }
+}

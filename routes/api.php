@@ -24,6 +24,7 @@ use App\Http\Controllers\SuperAdmin\RetraiteController;
 use App\Http\Controllers\SuperAdmin\AssuranceController;
 use App\Http\Controllers\SuperAdmin\ActivityLogController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
+use App\Http\Controllers\SuperAdmin\LeaveConfigController;
 
 
 use App\Http\Controllers\RH\EmployeeController as RHEmployeeController;
@@ -73,9 +74,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware(['verified'])->group(function () {
         Route::middleware('role:superadmin')->group(function () {
 
-            Route::get('/salary-years', function () {
-                return \App\Models\SuperAdmin\SalaryYear::orderBy('year', 'asc')->get();
-            });
             Route::get('/superadmin/dashboard-stats', [DashboardController::class, 'getStats']);
             
             Route::prefix('employees')->group(function () {
