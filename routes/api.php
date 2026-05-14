@@ -1,15 +1,15 @@
 <?php
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-
+// Authentification
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\SuperAdmin\UserProfileController;
 
+// Superadmin
 use App\Http\Controllers\SuperAdmin\SuperAdminController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
 use App\Http\Controllers\SuperAdmin\EmployeeController;
@@ -26,10 +26,14 @@ use App\Http\Controllers\SuperAdmin\ActivityLogController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\LeaveConfigController;
 
-
+// RH
 use App\Http\Controllers\RH\EmployeeController as RHEmployeeController;
 use App\Http\Controllers\RH\salaryController;
+
+// Employe
 use App\Http\Controllers\Employe\LeaveRequestController;
+
+
 
 Route::get('/check-setup', [SuperAdminController::class, 'checkStatus']);
 Route::post('/setup-superadmin', [SuperAdminController::class, 'setup']);
@@ -38,11 +42,9 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
 Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 
-
 Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
     ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify');
-
 
 Route::get('/Settings/registration-status', function () {
     $setting = \App\Models\SuperAdmin\Setting::where('key', 'registration_enabled')->first();
@@ -51,21 +53,14 @@ Route::get('/Settings/registration-status', function () {
     ]);
 });
 
-
 Route::middleware('auth:sanctum')->group(function () {
-
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
     Route::delete('/activity-logs/{id}', [ActivityLogController::class, 'destroy']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
-
+    Route::get('/user', function (Request $request) { return $request->user();});
     Route::post('/user/update-password-first', [AuthController::class, 'updatePasswordFirst']);
     Route::post('/user/skip-password-change', [AuthController::class, 'skipPasswordChange']);
     Route::get('/auth/user-status', [AuthController::class, 'userStatus']);
-
-    // Verification Notification
     Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail'])
         ->middleware(['throttle:6,1'])
         ->name('verification.send');
@@ -76,13 +71,12 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('/leave-types/{year}', [LeaveConfigController::class, 'getTypesByYear']);
     Route::get('/leave-config/full/{yearId}', [LeaveConfigController::class, 'getFullConfig']);
-
     Route::get('/employees/{id}/salary-dashboard', [EmployeeController::class, 'salaryDashboard']);
-
     Route::get('/my-salary', [EmployeeController::class, 'mySalary']);
 
-    Route::middleware(['verified'])->group(function () {
 
+
+    Route::middleware(['verified'])->group(function () {
         Route::middleware('role:superadmin')->group(function () {
             Route::get('/superadmin/dashboard-stats', [DashboardController::class, 'getStats']);
     
@@ -172,7 +166,6 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/cached-settings/{annee}', [IrController::class, 'getCachedSettings']);
             });
 
-
             Route::prefix('retraite')->group(function () {
                 Route::get('/settings/{year}', [RetraiteController::class, 'getSettings']);
                 Route::post('/settings', [RetraiteController::class, 'storeOrUpdate']);
@@ -223,16 +216,12 @@ Route::middleware('auth:sanctum')->group(function () {
             });
         });
 
-        
-        Route::middleware('role:employee')->group(function () { 
-            Route::prefix('leave-requests')->group(function () {
-                Route::get('/my-history', [LeaveRequestController::class, 'myRequests']);
-                Route::post('/store', [LeaveRequestController::class, 'store']);
-                // Route::get('/balance', [LeaveRequestController::class, 'getLeaveStats']);
-            });
-        });
 
-        
+
+
+
+
+
 
 
 
@@ -241,7 +230,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         Route::middleware('role:rh')->group(function () {
-            Route::get('/my-salary', [salaryController::class, 'mySalary']);
+            Route::get('/rh/my-salary', [salaryController::class, 'mySalary']);
+
+            // ✅ Routes pour la gestion des congés RH
+            Route::prefix('hr/leaves')->group(function () {
+                Route::get('/all', [LeaveRequestController::class, 'allRequests']);
+                Route::post('/update-status/{id}', [LeaveRequestController::class, 'updateStatus']);
+            });
 
             Route::prefix('rh')->group(function (){
                 Route::get('/employees/annees', [RHEmployeeController::class, 'getAnnees']);
@@ -257,19 +252,27 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::delete('/credits/{creditId}', [RHEmployeeController::class, 'deleteCredit']);
                 Route::get('/employees/export-pdf', [RHEmployeeController::class, 'exportPDF']);
                 Route::get('/gestionEtat/get-by-year/{year}', [RHEmployeeController::class, 'getClassification']);
-                        
-                // ✅ HAD L MÉTHODES KAYNIN F RHEmployeeController (delegate l SuperAdmin)
                 Route::get('/cotisations', [RHEmployeeController::class, 'getCotisations']);
                 Route::get('/credit-types', [RHEmployeeController::class, 'getCreditTypes']);
             });
-
-
-
-            Route::prefix('hr/leaves')->group(function () {
-                Route::get('/all', [LeaveRequestController::class, 'allRequests']);
-                Route::post('/update-status/{id}', [LeaveRequestController::class, 'updateStatus']);
-            });
         });
 
+
+
+
+
+
+
+
+
+
+        
+Route::middleware('role:employee')->group(function () { 
+    Route::prefix('leave-requests')->group(function () {
+        Route::get('/my-history', [LeaveRequestController::class, 'myRequests']);
+        Route::post('/store', [LeaveRequestController::class, 'store']);
+        Route::get('/balance', [LeaveRequestController::class, 'getLeaveStats']);
+    });
+});
     });
 });

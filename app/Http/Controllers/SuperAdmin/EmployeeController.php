@@ -118,13 +118,14 @@ class EmployeeController extends Controller
                 $query->where('statut', $request->statut);
             }
 
-            $employees = $query->with(['post', 'gradeRel', 'echelleRel', 'echelonRel'])
+            $employees = $query->with(['post', 'gradeRel', 'echelleRel', 'echelonRel', 'user'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
             
             $employees->getCollection()->transform(function ($employee) {
                 $employee->date_naissance = $employee->date_naissance ? date('Y-m-d', strtotime($employee->date_naissance)) : null;
                 $employee->date_embauche = $employee->date_embauche ? date('Y-m-d', strtotime($employee->date_embauche)) : null;
+                $employee->role = $employee->user?->role ?? 'employee';
                 return $employee;
             });
             
@@ -133,7 +134,6 @@ class EmployeeController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
     // ============================================================
     // STORE - AJOUTER UN EMPLOYE
     // ============================================================
@@ -586,6 +586,103 @@ class EmployeeController extends Controller
             }
         } catch (\Exception $e) {
             return $type === 'ir' || $type === 'retraite' ? null : collect([]);
+        }
+    }
+    public function exportPDF(Request $request)
+    {
+        try {
+            $query = Employee::query();
+
+            if ($request->filled('annee_id')) {
+                $query->where('annee_id', $request->annee_id);
+            }
+
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('prenom', 'like', "%$search%")
+                        ->orWhere('nom', 'like', "%$search%")
+                        ->orWhere('email', 'like', "%$search%");
+                });
+            }
+
+            if ($request->filled('statut') && $request->statut !== 'Tous') {
+                $query->where('statut', $request->statut);
+            }
+
+            $employees = $query->with(['post', 'gradeRel', 'echelleRel', 'echelonRel', 'user'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Get current year info
+            $annee = null;
+            if ($request->filled('annee_id')) {
+                $annee = SalaryYear::find($request->annee_id);
+            }
+
+            // === AJOUTEZ CES CALCULS POUR LES STATISTIQUES ===
+            $actifs = $employees->where('statut', 'ACTIF')->count();
+            $conges = $employees->where('statut', 'CONGE')->count();
+            $departs = $employees->where('statut', 'DEPART')->count();
+            
+            // Calculer la masse salariale totale
+            $totalSalaires = 0;
+            $gradesSummary = [];
+            
+            foreach ($employees as $emp) {
+                $salary = EmployeeSalary::where('employee_id', $emp->id)
+                    ->where('year', $annee?->year ?? date('Y'))
+                    ->first();
+                
+                $salaireBrut = $salary ? $salary->brut_salary : ($emp->salaire ?? 0);
+                $totalSalaires += $salaireBrut;
+                
+                // Récapitulatif par grade
+                $gradeName = $emp->grade ?? 'Non spécifié';
+                if (!isset($gradesSummary[$gradeName])) {
+                    $gradesSummary[$gradeName] = ['name' => $gradeName, 'count' => 0, 'total' => 0];
+                }
+                $gradesSummary[$gradeName]['count']++;
+                $gradesSummary[$gradeName]['total'] += $salaireBrut;
+            }
+            
+            $gradesCount = count($gradesSummary);
+            
+            // Trier les grades par ordre alphabétique
+            ksort($gradesSummary);
+            $gradesSummary = array_values($gradesSummary);
+
+            $data = [
+                'employees' => $employees,
+                'annee' => $annee ? $annee->year : date('Y'),
+                'date' => now()->format('d/m/Y H:i:s'),
+                'total' => $employees->count(),
+                'actifs' => $actifs,
+                'conges' => $conges,
+                'departs' => $departs,
+                'totalSalaires' => $totalSalaires,
+                'gradesCount' => $gradesCount,
+                'gradesSummary' => $gradesSummary,
+                'filters' => [
+                    'search' => $request->search,
+                    'statut' => $request->statut
+                ]
+            ];
+
+            // === UTILISEZ LE BON NOM DE VUE ===
+            $pdf = Pdf::loadView('pdf.employees', $data);
+            $pdf->setPaper('A4', 'landscape');
+            $pdf->setOptions([
+                'defaultFont' => 'sans-serif',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true
+            ]);
+            
+            return $pdf->download('employes_' . ($annee?->year ?? date('Y')) . '_' . date('Y-m-d') . '.pdf');
+            
+        } catch (\Exception $e) {
+            Log::error("PDF Export failed: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 

@@ -5,18 +5,16 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Employe\EmployeeSalary;
 use App\Models\SuperAdmin\Employee;
-
-use App\Models\SuperAdmin\SalaryYear;
-use App\Models\SuperAdmin\EmployeeCredit;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\Auth\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use DateTime;
 
 class salaryController extends Controller {
-            public function mySalary()
+
+    private function calculateAndStoreSalary($employeeId, $year = null)
+    {
+        $superAdminController = app(\App\Http\Controllers\SuperAdmin\EmployeeController::class);
+        return $superAdminController->calculateAndStoreSalary($employeeId, $year);
+    }
+    public function mySalary()
     {
         try {
             $user = auth()->user();
@@ -39,7 +37,6 @@ class salaryController extends Controller {
                 $employeeSalary = $this->calculateAndStoreSalary($employee->id);
             }
             
-            // ✅ Récupérer les crédits en temps réel depuis la table employee_credits
             $credits = $employee->credits()->where('statut', 'ACTIF')->get();
             $creditsTotal = 0;
             $creditsDetails = [];
@@ -65,7 +62,6 @@ class salaryController extends Controller {
                 ];
             }
             
-            // ✅ Recalculer le total des déductions avec les crédits en temps réel
             $totalDeductions = ($employeeSalary->cotisations_total ?? 0) + 
                             ($employeeSalary->ir_total ?? 0) + 
                             ($employeeSalary->rcar_total ?? 0) + 

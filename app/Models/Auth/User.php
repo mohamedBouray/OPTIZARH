@@ -56,6 +56,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     public function employee(){
-    return $this->hasOne(\App\Models\SuperAdmin\Employee::class, 'user_id');
-}
+        return $this->hasOne(\App\Models\SuperAdmin\Employee::class, 'user_id');
+    }
 }

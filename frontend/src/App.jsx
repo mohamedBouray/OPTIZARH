@@ -50,6 +50,7 @@ import Demandes from './routes/superadmin/Demande';
 import RHDashboard from './routes/Rh/Dashboard';
 import EmployeesRH from './routes/RH/Employees';
 import RHsalary from './routes/RH/Salary';
+import RHDemande from './routes/RH/Demande';
 
 // Employee Components
 import EmployeeDashboard from './routes/employee/Dashboard';
@@ -230,6 +231,7 @@ function AppContent() {
                         <Route path="/RH/Dashboard" element={<RHDashboard />} />
                         <Route path="/RH/Employes" element={<EmployeesRH />} />
                         <Route path="/RH/Salary" element={<RHsalary />} />
+                        <Route path="/RH/Demande" element={<RHDemande />} />
                     </Route>
                 </Route>
 

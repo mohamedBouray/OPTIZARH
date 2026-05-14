@@ -7,6 +7,7 @@ use App\Models\SuperAdmin\SalaryYear;
 
 class LeaveSetting extends Model
 {
+    protected $table = 'leave_settings';
     protected $fillable = [
         'salary_year_id',
         'category_name',

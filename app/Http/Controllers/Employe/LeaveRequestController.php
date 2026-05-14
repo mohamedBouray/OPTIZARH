@@ -24,7 +24,6 @@ class LeaveRequestController extends Controller
                 'error' => 'Had l-compte ma-m-rtabetch b-ay employee. Khass t-creer profil employee l had l-user f l-lowel.'
             ], 404);
         }
-
         $employeeId = $user->employee->id; 
         
         $requests = LeaveRequest::with('leaveType')
@@ -36,75 +35,97 @@ class LeaveRequestController extends Controller
     }
 
     public function store(Request $request){
-        $leaveType = LeaveType::findOrFail($request->leave_type_id);
-        $isCertificate = ($leaveType->max_days_per_request == 0);
-        $request->validate([
-            'leave_type_id' => 'required|exists:leave_types,id',
-            'salary_year_id' => 'required|exists:salary_years,id',
-            'start_date' => $isCertificate ? 'nullable|date' : 'required|date',
-            'end_date' => $isCertificate ? 'nullable|date' : 'required|date|after_or_equal:start_date',
-            // duration t-9der t-kon 0 f l-certificate
-            'duration' => $isCertificate ? 'required|integer|min:0' : 'required|integer|min:1',
-            'comments' => 'nullable|string',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-        ]);
+        try {
+            $leaveType = LeaveType::findOrFail($request->leave_type_id);
+            $isCertificate = ($leaveType->max_days_per_request == 0);
+            
+            $rules = [
+                'leave_type_id' => 'required|exists:leave_types,id',
+                'salary_year_id' => 'required|exists:salary_years,id',
+                'comments' => 'nullable|string',
+                'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            ];
+            
+            if (!$isCertificate) {
+                $rules['start_date'] = 'required|date|after_or_equal:today';
+                $rules['end_date'] = 'required|date|after_or_equal:start_date';
+                $rules['duration'] = 'required|integer|min:1';
+            } else {
+                $rules['duration'] = 'required|integer|min:0';
+                $rules['start_date'] = 'nullable|date';
+                $rules['end_date'] = 'nullable|date';
+            }
+            
+            $validated = $request->validate($rules);
 
-        $employeeId = auth()->user()->employee->id;
-        $setting = LeaveSetting::where('salary_year_id', $request->salary_year_id)->first();
+            $employeeId = auth()->user()->employee->id;
+            
+            if (!$employeeId) {
+                return response()->json(['error' => 'Profil employé non trouvé'], 400);
+            }
+            
+            $setting = LeaveSetting::where('salary_year_id', $request->salary_year_id)->first();
 
-        if (!$setting) {
-            return response()->json(['error' => 'Super Admin mazal ma-configurach had l-3am.'], 400);
-        }
-
-        // 3. Check l-quota ghir ila kan congé (duration > 0)
-        if (!$isCertificate) {
-            if ($request->duration > $leaveType->max_days_per_request) {
-                return response()->json([
-                    'error' => "Had l-nou3 dyal l-congé ma-i9derch ifout {$leaveType->max_days_per_request} jours."
-                ], 422);
+            if (!$setting) {
+                return response()->json(['error' => 'Configuration des congés non trouvée pour cette année'], 400);
             }
 
-            $balance = LeaveBalance::firstOrCreate(
-                ['employee_id' => $employeeId, 'salary_year_id' => $request->salary_year_id]
-            );
+            if (!$isCertificate && $request->duration > 0) {
+                if ($request->duration > $leaveType->max_days_per_request) {
+                    return response()->json([
+                        'error' => "Ce type de congé ne peut pas dépasser {$leaveType->max_days_per_request} jours."
+                    ], 422);
+                }
 
-            if (($balance->days_used + $request->duration) > $setting->annual_global_max) {
-                $left = $setting->annual_global_max - $balance->days_used;
-                return response()->json([
-                    'error' => "Quota dépassé! Bqaw lik ghir {$left} jours."
-                ], 422);
+                $balance = LeaveBalance::firstOrCreate(
+                    ['employee_id' => $employeeId, 'salary_year_id' => $request->salary_year_id],
+                    ['days_used' => 0]
+                );
+
+                $remainingDays = $setting->annual_global_max - $balance->days_used;
+                
+                if (($balance->days_used + $request->duration) > $setting->annual_global_max) {
+                    return response()->json([
+                        'error' => "Quota dépassé! Il vous reste {$remainingDays} jours."
+                    ], 422);
+                }
             }
+
+            $attachmentPath = null;
+            if ($request->hasFile('attachment')) {
+                $attachmentPath = $request->file('attachment')->store('leave_attachments', 'public');
+            }
+
+            $leaveRequest = LeaveRequest::create([
+                'employee_id' => $employeeId,
+                'leave_type_id' => $request->leave_type_id,
+                'salary_year_id' => $request->salary_year_id,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'duration' => $request->duration,
+                'comments' => $request->comments,
+                'status' => 'PENDING',
+                'attachment_path' => $attachmentPath,
+            ]);
+
+            return response()->json(['message' => 'Demande envoyée avec succès!', 'data' => $leaveRequest], 201);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $attachmentPath = null;
-        if ($request->hasFile('attachment')) {
-            $attachmentPath = $request->file('attachment')->store('leave_attachments', 'public');
-        }
-
-        $leaveRequest = LeaveRequest::create([
-            'employee_id' => $employeeId,
-            'leave_type_id' => $request->leave_type_id,
-            'salary_year_id' => $request->salary_year_id,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'duration' => $request->duration,
-            'comments' => $request->comments,
-            'status' => 'PENDING',
-            'attachment_path' => $attachmentPath,
-        ]);
-
-        return response()->json(['message' => 'Demande envoyée avec succès!', 'data' => $leaveRequest], 201);
     }
 
     // ==========================================
     // PARTIE 2: RH (Approve & Reject)
     // ==========================================
 
-    public function allRequests()
-    {
-        $requests = LeaveRequest::with(['employee', 'leaveType'])->orderBy('created_at', 'desc')->get();
-        return response()->json($requests);
-    }
+public function allRequests()
+{
+    $requests = LeaveRequest::with(['employee', 'leaveType.category'])->orderBy('created_at', 'desc')->get();
+    return response()->json($requests);
+}
 
     public function updateStatus(Request $request, $id){
         $request->validate([
@@ -112,8 +133,7 @@ class LeaveRequestController extends Controller
             'hr_note' => 'nullable|string',
         ]);
 
-        $leaveRequest = LeaveRequest::with('leaveType')->findOrFail($id); // Zedt l-with bach n-jibo l-Type
-
+        $leaveRequest = LeaveRequest::with('leaveType')->findOrFail($id); 
         if ($leaveRequest->status !== 'PENDING') {
             return response()->json(['error' => 'Had l-demande deja traitée!'], 400);
         }
@@ -126,7 +146,6 @@ class LeaveRequestController extends Controller
         ]);
 
         if ($request->status === 'APPROVED') {
-            // ISLAH 2: Jib salary_year_id mn leaveType hit makaynach f leave_requests
             $salaryYearId = $leaveRequest->leaveType->salary_year_id;
 
             $balance = LeaveBalance::where('employee_id', $leaveRequest->employee_id)
@@ -138,12 +157,11 @@ class LeaveRequestController extends Controller
             } else {
                 LeaveBalance::create([
                     'employee_id' => $leaveRequest->employee_id,
-                    'salary_year_id' => $salaryYearId, // Islah hna ta howa
+                    'salary_year_id' => $salaryYearId,
                     'days_used' => $leaveRequest->duration
                 ]);
             }
         }
-
         return response()->json(['message' => "Demande {$request->status} avec succès!"]);
     }
 
@@ -151,14 +169,12 @@ class LeaveRequestController extends Controller
         $user = auth()->user();
         $employee = $user->employee;
 
-        // 1. Njebdo l-annee active
         $nowYear = now()->year; 
 
         $currentYear = SalaryYear::where('year', $nowYear)->first() 
                 ?? SalaryYear::where('status', 'ACTIVE')->first() 
                 ?? SalaryYear::latest()->first();
 
-        // 2. Data dyal l-Year (ANNUEL) - Card 1
         $globalSettings = LeaveSetting::where('salary_year_id', $currentYear->id)
                             ->where('category_name', 'ANNUEL')->first();
         
@@ -168,10 +184,9 @@ class LeaveRequestController extends Controller
         $totalGlobal = $globalSettings ? $globalSettings->annual_global_max : 0;
         $usedGlobal = $balance ? $balance->days_used : 0;
 
-        // 3. Data dyal l-conge l-akhiri li t-accepta (Card 2)
         $lastApproved = LeaveRequest::where('employee_id', $employee->id)
                         ->where('status', 'APPROVED')
-                        ->with('leaveType.leaveCategory') // t-akked mn relationship
+                        ->with('leaveType.leaveCategory')
                         ->latest()->first();
 
         return response()->json([

@@ -24,7 +24,7 @@ class LeaveType extends Model
         return $this->hasMany(LeaveRequest::class, 'leave_type_id');
     }
 
-    public function leaveCategory(){
+    public function category(){
         return $this->belongsTo(LeaveSetting::class, 'leave_category_id');
     }
 }
