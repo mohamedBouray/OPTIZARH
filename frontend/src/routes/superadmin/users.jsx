@@ -442,6 +442,11 @@ export default function EmployeeManagement() {
         const newErrors = {};
         if (!formData.prenom?.trim())
              newErrors.prenom = "Prenom requis";
+
+
+        if (!formData.cotisation_id) {
+            newErrors.cotisation_id = "Veuillez sélectionner un organisme de cotisation";
+        }
         if (!formData.nom?.trim()) 
             newErrors.nom = "Nom requis";
         if (!formData.email?.trim()) {
@@ -1143,22 +1148,26 @@ export default function EmployeeManagement() {
                                 )}
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                    <div className="w-full">
-                                        <label className={`text-xs font-medium ${textMutedClass} mb-1 block`}>Organisme (Cotisation)</label>
-                                        <select 
-                                            value={formData.cotisation_id || ""} 
-                                            onChange={(e) => handleCotisationChange(e.target.value)} 
-                                            className={`w-full ${errors.cotisation_id ? inputErrorClass : inputClass}`}
-                                        >
-                                            <option value="">-- Sélectionner un organisme --</option>
-                                            {cotisationsList.map(org => (
-                                                <option key={org.id} value={org.id}>
-                                                    {org.name} {org.is_favorite && '⭐'}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {errors.cotisation_id && <p className="text-red-500 text-xs mt-1">{errors.cotisation_id}</p>}
-                                    </div>
+                                    {/* Dans le formulaire - Section Information Professionnelle */}
+<div className="w-full">
+    <label className={`text-xs font-medium ${textMutedClass} mb-1 block`}>
+        Organisme de cotisation <span className="text-red-500">*</span>
+    </label>
+    <select 
+        value={formData.cotisation_id || ""} 
+        onChange={(e) => handleCotisationChange(e.target.value)} 
+        className={`w-full ${errors.cotisation_id ? inputErrorClass : inputClass}`}
+        required
+    >
+        <option value="">-- Sélectionner un organisme --</option>
+        {cotisationsList.map(org => (
+            <option key={org.id} value={org.id}>
+                {org.name} {org.is_favorite && '⭐'}
+            </option>
+        ))}
+    </select>
+    {errors.cotisation_id && <p className="text-red-500 text-xs mt-1">{errors.cotisation_id}</p>}
+</div>
                                     <div className="w-full">
                                         <label className={`text-xs font-medium ${textMutedClass} mb-1 block`}>Statut</label>
                                         <select name="statut" value={formData.statut} onChange={handleChange} className={`w-full ${inputClass}`}>
@@ -1269,7 +1278,7 @@ export default function EmployeeManagement() {
                                                 <td className="p-4 font-semibold text-purple-600 dark:text-purple-400 text-sm whitespace-nowrap">{emp.details ? Math.round(emp.details.brut_salary).toLocaleString() + ' MAD' : '…'}</td>
                                                 <td className="p-4 font-semibold text-emerald-600 dark:text-emerald-400 text-sm whitespace-nowrap">{emp.details ? Math.round(emp.details.net_salary).toLocaleString() + ' MAD' : '…'}</td>
                                                 <td className="p-4"><span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${emp.statut === 'ACTIF' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : emp.statut === 'CONGE' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'}`}><CheckCircle size={10} /> {emp.statut}</span></td>
-                                                <td className="p-4"><div className="flex items-center gap-1"><button onClick={() => handleViewEmployee(emp)} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg cursor-pointer" title="Voir"><Eye size={16} /></button><button onClick={() => handleEdit(emp)} disabled={!isYearEditable} className={`p-1.5 rounded-lg cursor-pointer ${!isYearEditable ? 'text-gray-400' : 'text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'}`} title="Modifier"><Edit2 size={16} /></button><button onClick={() => handleManageCredits(emp)} className="p-1.5 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg cursor-pointer" title="Gérer les crédits"><DollarSign size={16} /></button><button onClick={() => handleDeleteClick(emp.id, `${emp.prenom} ${emp.nom}`)} disabled={!isYearEditable} className={`p-1.5 rounded-lg cursor-pointer ${!isYearEditable ? 'text-gray-400' : 'text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30'}`} title="Supprimer"><Trash2 size={16} /></button></div></td>
+                                                <td className="p-4"><div className="flex items-center gap-1"><button onClick={() => handleViewEmployee(emp)} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg cursor-pointer" title="Voir"><Eye size={16} /></button><button onClick={() => handleEdit(emp)} disabled={!isYearEditable} className={`p-1.5 rounded-lg cursor-pointer ${!isYearEditable ? 'text-gray-400' : 'text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'}`} title="Modifier"><Edit2 size={16} /></button><button onClick={() => handleDeleteClick(emp.id, `${emp.prenom} ${emp.nom}`)} disabled={!isYearEditable} className={`p-1.5 rounded-lg cursor-pointer ${!isYearEditable ? 'text-gray-400' : 'text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30'}`} title="Supprimer"><Trash2 size={16} /></button></div></td>
                                             </tr>
                                         ))
                                     )}

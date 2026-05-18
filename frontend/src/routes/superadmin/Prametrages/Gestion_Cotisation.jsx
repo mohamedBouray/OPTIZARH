@@ -55,7 +55,15 @@ const GestionCotisation = () => {
     };
     fetchYears();
   }, []);
-
+const checkOrganismeUsed = async (orgId) => {
+    try {
+        const response = await api.get(`/api/cotisations/check-usage/${orgId}?year=${config.year}`);
+        return response.data.used;
+    } catch (error) {
+        console.error("Erreur vérification usage:", error);
+        return false;
+    }
+};
   const fetchData = async () => {
     setFetching(true);
     try {
@@ -193,9 +201,14 @@ const GestionCotisation = () => {
   };
 
   // ============ DELETE WITH API ============
-  const openDeleteOrganismeModal = (orgId, orgName) => {
+  const openDeleteOrganismeModal = async (orgId, orgName) => {
+    const isUsed = await checkOrganismeUsed(orgId);
+    if (isUsed) {
+        showNotification(`⚠️ L'organisme "${orgName}" est utilisé par des employés. Impossible de le supprimer.`, "error");
+        return;
+    }
     setDeleteModal({ isOpen: true, type: 'organisme', id: orgId, name: orgName, orgId: null });
-  };
+};
 
   const openDeleteRubriqueModal = (orgId, rubId, rubLabel) => {
     setDeleteModal({ isOpen: true, type: 'rubrique', id: rubId, name: rubLabel || 'cette rubrique', orgId: orgId });

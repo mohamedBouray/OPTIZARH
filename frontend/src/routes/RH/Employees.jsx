@@ -121,7 +121,7 @@ export default function RHEmployeeManagement() {
     const showForm = isYearEditable;
 
     // ══════════════════════════════════════════════════════════
-    // CSS TOKENS (unifiés)
+    // CSS TOKENS
     // ══════════════════════════════════════════════════════════
     const bgClass = darkMode ? 'bg-[#0D0D0D]' : 'bg-gray-50';
     const cardClass = darkMode ? 'bg-[#1A1A1A] border-[#2A2A2A]' : 'bg-white border-gray-200';
@@ -280,6 +280,11 @@ export default function RHEmployeeManagement() {
         }));
     };
 
+    const handleCotisationChange = (cotisationId) => {
+        if (!isYearEditable) return;
+        setFormData(p => ({ ...p, cotisation_id: cotisationId }));
+    };
+
     const generateRandomPassword = () => {
         const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let password = '';
@@ -290,30 +295,33 @@ export default function RHEmployeeManagement() {
     };
 
     const validateForm = () => {
-        const e = {};
-        if (!formData.prenom?.trim())   e.prenom = 'Prénom requis';
-        if (!formData.nom?.trim())      e.nom = 'Nom requis';
-        if (!formData.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-            e.email = 'Email invalide';
-        if (!formData.password && !isEdit) e.password = 'Mot de passe requis';
-        if (!formData.date_naissance)   e.date_naissance = 'Date de naissance requise';
-        else if (!verifierAge(formData.date_naissance))
-            e.date_naissance = "L'employé doit avoir au moins 18 ans";
-        if (!formData.date_embauche)    e.date_embauche = "Date d'embauche requise";
-        else if (new Date(formData.date_embauche).getFullYear() !== parseInt(selectedAnnee))
-            e.date_embauche = `La date d'embauche doit être dans l'année ${selectedAnnee}`;
-        if (!formData.Post_id)          e.Post_id = 'Poste requis';
-        if (!formData.grade_id)         e.grade_id = 'Grade requis';
-        if (!formData.echelle_id)       e.echelle_id = 'Échelle requise';
-        if (!formData.echelon_id)       e.echelon_id = 'Échelon requis';
-        if (!formData.cotisation_id)    e.cotisation_id = 'Organisme requis';
-        setErrors(e);
-        if (Object.keys(e).length) {
-            showNotification(Object.values(e)[0], 'error');
-            return false;
-        }
-        return true;
-    };
+    const e = {};
+    if (!formData.prenom?.trim())   e.prenom = 'Prénom requis';
+    if (!formData.nom?.trim())      e.nom = 'Nom requis';
+    if (!formData.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+        e.email = 'Email invalide';
+    
+    // ⚠️ PAS DE VÉRIFICATION DE MOT DE PASSE ICI
+    
+    if (!formData.date_naissance)   e.date_naissance = 'Date de naissance requise';
+    else if (!verifierAge(formData.date_naissance))
+        e.date_naissance = "L'employé doit avoir au moins 18 ans";
+    if (!formData.date_embauche)    e.date_embauche = "Date d'embauche requise";
+    else if (new Date(formData.date_embauche).getFullYear() !== parseInt(selectedAnnee))
+        e.date_embauche = `La date d'embauche doit être dans l'année ${selectedAnnee}`;
+    if (!formData.Post_id)          e.Post_id = 'Poste requis';
+    if (!formData.grade_id)         e.grade_id = 'Grade requis';
+    if (!formData.echelle_id)       e.echelle_id = 'Échelle requise';
+    if (!formData.echelon_id)       e.echelon_id = 'Échelon requis';
+    if (!formData.cotisation_id)    e.cotisation_id = 'Organisme requis';
+    
+    setErrors(e);
+    if (Object.keys(e).length) {
+        showNotification(Object.values(e)[0], 'error');
+        return false;
+    }
+    return true;
+};
 
     const handleSubmit = async (ev) => {
         ev.preventDefault();
@@ -345,7 +353,8 @@ export default function RHEmployeeManagement() {
                 indice: formData.indice ? parseFloat(formData.indice) : null,
                 statut: formData.statut,
                 cotisation_id: formData.cotisation_id ? parseInt(formData.cotisation_id) : null,
-                password: finalPassword, role: 'employee',
+                password: !isEdit ? finalPassword : undefined,
+                role: 'employee',
                 send_credentials_email: sendCredentialsEmail,
                 credits: employeeCredits.map(c => ({
                     ...(c.id ? { id: c.id } : {}),
@@ -540,7 +549,7 @@ export default function RHEmployeeManagement() {
             CONGE:  { cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', Icon: Clock },
             DEPART: { cls: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400', Icon: X },
         };
-        const { cls, Icon } = map[statut] || map.DEPART;
+        const { cls, Icon } = map[statut] || map.ACTIF;
         return (
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${cls}`}>
                 <Icon size={10} /> {statut}
@@ -552,9 +561,27 @@ export default function RHEmployeeManagement() {
         <div className="mb-3">
             <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
                 <div className={`w-1 h-5 bg-gradient-to-b ${from} ${to} rounded-full`} />
-                <Icon size={16} /> {label}
+                <Icon size={16} className="text-indigo-500" /> {label}
             </h3>
             <div className={`h-px bg-gradient-to-r ${from} to-transparent mt-2`} />
+        </div>
+    );
+
+    // Helper components for modal
+    const InfoItem = ({ label, value }) => (
+        <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
+            <p className={`text-xs ${textMutedClass}`}>{label}</p>
+            <div className={`text-sm font-medium ${textClass} mt-1`}>{value}</div>
+        </div>
+    );
+
+    const SalaryLine = ({ label, sub, value, valueClass }) => (
+        <div className="flex justify-between items-center py-1">
+            <div>
+                <span className={`text-sm ${textClass}`}>{label}</span>
+                {sub && <span className={`text-xs ml-2 ${textMutedClass}`}>{sub}</span>}
+            </div>
+            <span className={`text-sm ${valueClass || 'text-gray-900 dark:text-gray-100'}`}>{value}</span>
         </div>
     );
 
@@ -590,145 +617,72 @@ export default function RHEmployeeManagement() {
                     </div>
                     
                     <div className="p-6 space-y-6">
+                        {/* Personal Info Section */}
                         <div>
-                            <div className="mb-3">
-                                <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
-                                    <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
-                                    <User size={16} className="text-emerald-500" /> Informations personnelles
-                                </h3>
-                                <div className="h-px bg-gradient-to-r from-emerald-500 to-transparent mt-2"></div>
-                            </div>
+                            <SectionHeading from="from-emerald-500" to="to-green-600" Icon={User} label="Informations personnelles" />
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Nom complet</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.prenom} {employee.nom}</p>
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Email</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1 truncate`}>{employee.email}</p>
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Téléphone</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.telephone || '-'}</p>
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Statut</p>
-                                    <StatusBadge statut={employee.statut} />
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Situation familiale</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.situation_familiale || '-'}</p>
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Enfants à charge</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.nombre_enfants || '0'}</p>
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Date de naissance</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.date_naissance ? new Date(employee.date_naissance).toLocaleDateString('fr-FR') : '-'}</p>
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Date d'embauche</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.date_embauche ? new Date(employee.date_embauche).toLocaleDateString('fr-FR') : '-'}</p>
-                                </div>
+                                <InfoItem label="Nom complet" value={`${employee.prenom} ${employee.nom}`} />
+                                <InfoItem label="Email" value={employee.email} />
+                                <InfoItem label="Téléphone" value={employee.telephone || '-'} />
+                                <InfoItem label="Statut" value={<StatusBadge statut={employee.statut} />} />
+                                <InfoItem label="Situation familiale" value={employee.situation_familiale || '-'} />
+                                <InfoItem label="Enfants à charge" value={employee.nombre_enfants || '0'} />
+                                <InfoItem label="Date de naissance" value={employee.date_naissance ? new Date(employee.date_naissance).toLocaleDateString('fr-FR') : '-'} />
+                                <InfoItem label="Date d'embauche" value={employee.date_embauche ? new Date(employee.date_embauche).toLocaleDateString('fr-FR') : '-'} />
                             </div>
                         </div>
 
+                        {/* Classification Section */}
                         <div>
-                            <div className="mb-3">
-                                <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
-                                    <div className="w-1 h-5 bg-indigo-500 rounded-full"></div>
-                                    <Briefcase size={16} className="text-indigo-500" /> Classification
-                                </h3>
-                                <div className="h-px bg-gradient-to-r from-indigo-500 to-transparent mt-2"></div>
-                            </div>
+                            <SectionHeading from="from-indigo-500" to="to-purple-600" Icon={Briefcase} label="Classification" />
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Poste</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.post?.name || employee.grade || '-'}</p>
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Grade</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.grade || '-'}</p>
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Echelle</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.echelle || '-'}</p>
-                                </div>
-                                <div className={`p-3 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <p className={`text-xs ${textMutedClass}`}>Echelon</p>
-                                    <p className={`text-sm font-medium ${textClass} mt-1`}>{employee.echelon || '-'}</p>
-                                </div>
+                                <InfoItem label="Poste" value={employee.post?.name || employee.grade || '-'} />
+                                <InfoItem label="Grade" value={employee.grade || '-'} />
+                                <InfoItem label="Echelle" value={employee.echelle || '-'} />
+                                <InfoItem label="Echelon" value={employee.echelon || '-'} />
                             </div>
                         </div>
 
+                        {/* Salary Section */}
                         <div>
-                            <div className="mb-3">
-                                <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
-                                    <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
-                                    <TrendingUp size={16} className="text-blue-500" /> Salaire de base et indemnités
-                                </h3>
-                                <div className="h-px bg-gradient-to-r from-blue-500 to-transparent mt-2"></div>
-                            </div>
+                            <SectionHeading from="from-blue-500" to="to-cyan-600" Icon={TrendingUp} label="Salaire de base et indemnités" />
                             <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
-                                <div className="flex justify-between items-center pb-2 border-b ${borderClass}">
-                                    <span className={`text-sm font-medium ${textClass}`}>Salaire de base</span>
-                                    <span className="text-sm font-semibold text-emerald-600">{formatMoney(d.base_salary)}</span>
-                                </div>
+                                <SalaryLine label="Salaire de base" value={formatMoney(d.base_salary)} valueClass="text-emerald-600" />
+                                
                                 {d.indemnites?.details?.length > 0 && (
                                     <div className="mt-3">
                                         <p className={`text-xs ${textMutedClass} mb-2`}>Indemnités appliquées :</p>
                                         {d.indemnites.details.map((ind, idx) => (
-                                            <div key={idx} className="flex justify-between items-center py-1">
-                                                <div>
-                                                    <span className={`text-sm ${textClass}`}>{ind.libelle}</span>
-                                                    <span className={`text-xs ml-2 ${textMutedClass}`}>
-                                                        ({ind.type === 'Fixe' ? 'Fixe' : `${ind.valeur}%`})
-                                                    </span>
-                                                </div>
-                                                <span className="text-sm text-blue-600">+{formatMoney(ind.montant)}</span>
-                                            </div>
+                                            <SalaryLine key={idx} label={ind.libelle} sub={`(${ind.type === 'Fixe' ? 'Fixe' : `${ind.valeur}%`})`} value={`+ ${formatMoney(ind.montant)}`} valueClass="text-blue-600" />
                                         ))}
-                                        <div className="flex justify-between items-center mt-2 pt-2 border-t ${borderClass}">
-                                            <span className={`text-sm font-semibold ${textClass}`}>Total indemnités</span>
-                                            <span className="text-sm font-bold text-blue-600">+{formatMoney(d.indemnites.total)}</span>
+                                        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                            <SalaryLine label="Total indemnités" value={`+ ${formatMoney(d.indemnites.total)}`} valueClass="text-blue-600 font-bold" />
                                         </div>
                                     </div>
                                 )}
-                                <div className="flex justify-between items-center mt-3 pt-2 border-t ${borderClass}">
-                                    <span className={`text-base font-bold ${textClass}`}>Salaire brut</span>
-                                    <span className="text-base font-bold text-purple-600">{formatMoney(d.brut_salary)}</span>
+                                
+                                <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                    <SalaryLine label="Salaire brut" value={formatMoney(d.brut_salary)} valueClass="text-purple-600 font-bold" />
                                 </div>
                             </div>
                         </div>
 
+                        {/* Deductions Section */}
                         <div>
-                            <div className="mb-3">
-                                <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
-                                    <div className="w-1 h-5 bg-rose-500 rounded-full"></div>
-                                    <Shield size={16} className="text-rose-500" /> Déductions
-                                </h3>
-                                <div className="h-px bg-gradient-to-r from-rose-500 to-transparent mt-2"></div>
-                            </div>
-                            <div className="space-y-4">
-                                <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
-                                    <div className="flex justify-between items-center">
-                                        <span className={`text-sm font-medium ${textClass}`}>Total déductions</span>
-                                        <span className="text-sm font-bold text-rose-600">- {formatMoney(d.total_deductions)}</span>
-                                    </div>
-                                </div>
+                            <SectionHeading from="from-rose-500" to="to-red-600" Icon={Shield} label="Déductions" />
+                            <div className={`p-4 rounded-lg ${cardClass} border ${borderClass}`}>
+                                <SalaryLine label="Total des déductions" value={`- ${formatMoney(d.total_deductions)}`} valueClass="text-rose-600 font-bold" />
                             </div>
                         </div>
 
-                        <div>
-                            <div className={`p-5 rounded-xl border-2 ${darkMode ? 'border-indigo-800 bg-indigo-950/20' : 'border-indigo-200 bg-indigo-50'}`}>
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <span className={`text-lg font-bold ${textClass}`}>Salaire net à payer</span>
-                                        <p className={`text-xs ${textMutedClass} mt-0.5`}>Après toutes déductions</p>
-                                    </div>
-                                    <span className={`text-2xl font-bold ${darkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{formatMoney(d.net_salary)}</span>
+                        {/* Net Salary */}
+                        <div className={`p-5 rounded-xl border-2 ${darkMode ? 'border-indigo-800 bg-indigo-950/20' : 'border-indigo-200 bg-indigo-50'}`}>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <span className={`text-lg font-bold ${textClass}`}>Salaire net à payer</span>
+                                    <p className={`text-xs ${textMutedClass} mt-0.5`}>Après toutes déductions</p>
                                 </div>
+                                <span className={`text-2xl font-bold ${darkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{formatMoney(d.net_salary)}</span>
                             </div>
                         </div>
 
@@ -922,7 +876,7 @@ export default function RHEmployeeManagement() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label className={`text-xs font-medium ${textMutedClass} mb-1 block`}>Organisme (Cotisation)</label>
-                                        <select value={formData.cotisation_id || ''} onChange={e => setFormData(p => ({ ...p, cotisation_id: e.target.value }))} className={errors.cotisation_id ? inputErrorClass : inputClass} disabled={!isYearEditable}>
+                                        <select value={formData.cotisation_id || ''} onChange={e => handleCotisationChange(e.target.value)} className={errors.cotisation_id ? inputErrorClass : inputClass} disabled={!isYearEditable} required>
                                             <option value="">-- Sélectionner un organisme --</option>
                                             {cotisationsList.map(o => <option key={o.id} value={o.id}>{o.nom || o.name} {o.is_favorite && '⭐'}</option>)}
                                         </select>
@@ -1004,6 +958,45 @@ export default function RHEmployeeManagement() {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Security Section */}
+                            <div>
+                                <SectionHeading from="from-blue-500" to="to-cyan-600" Icon={Lock} label="Sécurité & Accès" />
+                                <div className={`p-5 rounded-xl ${cardClass} border ${borderClass} space-y-4`}>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                                        <label className={`text-sm font-medium ${textClass}`}>Rôle Système</label>
+                                        <select name="role" value={formData.role || "employee"} onChange={handleChange} disabled={isEdit} className={`w-full p-2.5 rounded-xl border transition-all duration-200 ${isEdit ? `bg-gray-100 dark:bg-gray-800 ${borderClass} ${textClass} opacity-70 cursor-not-allowed` : `${inputClass}`}`}>
+                                            <option value="employee">Employé</option>
+                                        </select>
+                                    </div>
+                                    
+                                    {!isEdit && (
+                                        <div className="flex items-center gap-3 pt-2">
+                                            <input type="checkbox" id="send_credentials_email" checked={sendCredentialsEmail} onChange={(e) => setSendCredentialsEmail(e.target.checked)} className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                                            <label htmlFor="send_credentials_email" className={`text-sm font-medium cursor-pointer ${textClass}`}><Mail size={16} className="inline mr-2 text-indigo-500" /> Envoyer les identifiants par email à l'employé</label>
+                                        </div>
+                                    )}
+                                    
+                                    {isEdit && (
+                                        <div className={`p-3 rounded-lg border ${darkMode ? 'border-amber-800 bg-amber-950/20' : 'border-amber-200 bg-amber-50'}`}>
+                                            <div className="flex items-center gap-3">
+                                                <input type="checkbox" id="regenerate_password" checked={regeneratePassword} onChange={(e) => setRegeneratePassword(e.target.checked)} className="w-5 h-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer" />
+                                                <label htmlFor="regenerate_password" className={`text-sm font-medium cursor-pointer ${textClass}`}><RefreshCw size={16} className="inline mr-2 text-amber-500" /> Régénérer le mot de passe</label>
+                                            </div>
+                                            {regeneratePassword && (
+                                                <div className="mt-3">
+                                                    <div className="flex items-center gap-3 ml-7">
+                                                        <input type="checkbox" id="send_email_on_regenerate" checked={sendCredentialsEmail} onChange={(e) => setSendCredentialsEmail(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                                                        <label htmlFor="send_email_on_regenerate" className={`text-xs cursor-pointer ${textClass}`}><Mail size={12} className="inline mr-1" /> Envoyer le nouveau mot de passe par email</label>
+                                                    </div>
+                                                    <p className={`text-xs ${textMutedClass} mt-2 ml-7`}>Un nouveau mot de passe sera généré. L'employé devra le changer à la première connexion.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             <button type="submit" disabled={loading} className={`w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg cursor-pointer`}>
                                 {loading ? <Loader size={18} className="animate-spin" /> : <Save size={18} />}
                                 {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Enregistrer"}
@@ -1011,6 +1004,7 @@ export default function RHEmployeeManagement() {
                         </form>
                     </div>
                 )}
+                
                 {/* Modals */}
                 {showDetailsModal && selectedEmployeeDetails && <EmployeeDetailsModal employee={selectedEmployeeDetails} onClose={() => setShowDetailsModal(false)} />}
                 <DeleteConfirmModal isOpen={deleteModal.isOpen} onClose={() => setDeleteModal({ isOpen: false, employeeId: null, employeeName: '' })} onConfirm={confirmDelete} title="Confirmation de suppression" message={`Supprimer l'employé "${deleteModal.employeeName}" ? Cette action est irréversible.`} darkMode={darkMode} />
