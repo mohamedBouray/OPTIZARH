@@ -73,46 +73,24 @@
 ---
 
 ## 🏗️ Architecture Technique
-┌─────────────────────────────────────────────────────────────────────┐
-│ ARCHITECTURE TECHNIQUE │
-├─────────────────────────────────────────────────────────────────────┤
-│ │
-│ ┌─────────────────────────────────────────────────────────────┐ │
-│ │ 🌐 CLIENT (FRONTEND) │ │
-│ │ ───────────────────────────────────────────────────────── │ │
-│ │ • React JS (SPA) │ │
-│ │ • Tailwind CSS │ │
-│ │ • Axios (HTTP Client) │ │
-│ │ • React Router │ │
-│ └───────────────────────────┬─────────────────────────────────┘ │
-│ │ │
-│ 🔄 API REST (JSON) │
-│ │ │
-│ ┌───────────────────────────▼─────────────────────────────────┐ │
-│ │ 🖥️ SERVEUR (BACKEND) │ │
-│ │ ───────────────────────────────────────────────────────── │ │
-│ │ • Laravel (PHP) │ │
-│ │ • API RESTful │ │
-│ │ • Eloquent ORM │ │
-│ │ • Laravel Sanctum (Auth) │ │
-│ │ • Middleware (RBAC) │ │
-│ └───────────────────────────┬─────────────────────────────────┘ │
-│ │ │
-│ 🔗 SQLite │
-│ │ │
-│ ┌───────────────────────────▼─────────────────────────────────┐ │
-│ │ 💾 BASE DE DONNÉES │ │
-│ │ ───────────────────────────────────────────────────────── │ │
-│ │ • SQLite (Serverless) │ │
-│ │ • Transactions ACID │ │
-│ │ • Intégrité référentielle │ │
-│ │ • Sauvegarde automatique │ │
-│ └─────────────────────────────────────────────────────────────┘ │
-│ │
-└─────────────────────────────────────────────────────────────────────┘
 
-text
+### Architecture Découplée
 
+L'application repose sur une architecture **découplée** (Frontend / Backend indépendants) :
+
+| Composant | Technologie | Description |
+|-----------|-------------|-------------|
+| **Frontend** | React JS (SPA) | Interface utilisateur dynamique, navigation fluide |
+| | Tailwind CSS | Styling utilitaire, design responsive |
+| | Axios | Client HTTP pour les appels API |
+| | React Router | Gestion des routes côté client |
+| **Backend** | Laravel (PHP) | Framework robuste pour l'API REST |
+| | Eloquent ORM | Abstraction de la base de données |
+| | Laravel Sanctum | Authentification par tokens |
+| | Middleware RBAC | Contrôle d'accès par rôles |
+| **Base de Données** | SQLite | SGBD léger et autonome |
+| | Transactions ACID | Intégrité et cohérence des données |
+| | Sauvegarde automatique | Protection des données critiques |
 ---
 
 ## 🛠️ Stack Technique
