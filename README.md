@@ -71,43 +71,48 @@
 | 👤 **Employé** | Formulation des demandes, consultation de son salaire, suivi en temps réel, notifications |
 
 ---
+
+## 🏗️ Architecture Technique
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      ARCHITECTURE TECHNIQUE                        │
+│ ARCHITECTURE TECHNIQUE │
 ├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌─────────────────────────────────────────────────────────────┐   │
-│  │                    🌐 CLIENT (FRONTEND)                     │   │
-│  │  ─────────────────────────────────────────────────────────  │   │
-│  │  • React JS (SPA)                                          │   │
-│  │  • Tailwind CSS                                            │   │
-│  │  • Axios (HTTP Client)                                     │   │
-│  │  • React Router                                            │   │
-│  └───────────────────────────┬─────────────────────────────────┘   │
-│                              │                                     │
-│                      🔄 API REST (JSON)                           │
-│                              │                                     │
-│  ┌───────────────────────────▼─────────────────────────────────┐   │
-│  │                    🖥️ SERVEUR (BACKEND)                    │   │
-│  │  ─────────────────────────────────────────────────────────  │   │
-│  │  • Laravel (PHP)                                           │   │
-│  │  • API RESTful                                             │   │
-│  │  • Eloquent ORM                                            │   │
-│  │  • Laravel Sanctum (Auth)                                  │   │
-│  │  • Middleware (RBAC)                                       │   │
-│  └───────────────────────────┬─────────────────────────────────┘   │
-│                              │                                     │
-│                          🔗 SQLite                                │
-│                              │                                     │
-│  ┌───────────────────────────▼─────────────────────────────────┐   │
-│  │                    💾 BASE DE DONNÉES                      │   │
-│  │  ─────────────────────────────────────────────────────────  │   │
-│  │  • SQLite (Serverless)                                     │   │
-│  │  • Transactions ACID                                       │   │
-│  │  • Intégrité référentielle                                 │   │
-│  │  • Sauvegarde automatique                                  │   │
-│  └─────────────────────────────────────────────────────────────┘   │
-│                                                                     │
+│ │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ 🌐 CLIENT (FRONTEND) │ │
+│ │ ───────────────────────────────────────────────────────── │ │
+│ │ • React JS (SPA) │ │
+│ │ • Tailwind CSS │ │
+│ │ • Axios (HTTP Client) │ │
+│ │ • React Router │ │
+│ └───────────────────────────┬─────────────────────────────────┘ │
+│ │ │
+│ 🔄 API REST (JSON) │
+│ │ │
+│ ┌───────────────────────────▼─────────────────────────────────┐ │
+│ │ 🖥️ SERVEUR (BACKEND) │ │
+│ │ ───────────────────────────────────────────────────────── │ │
+│ │ • Laravel (PHP) │ │
+│ │ • API RESTful │ │
+│ │ • Eloquent ORM │ │
+│ │ • Laravel Sanctum (Auth) │ │
+│ │ • Middleware (RBAC) │ │
+│ └───────────────────────────┬─────────────────────────────────┘ │
+│ │ │
+│ 🔗 SQLite │
+│ │ │
+│ ┌───────────────────────────▼─────────────────────────────────┐ │
+│ │ 💾 BASE DE DONNÉES │ │
+│ │ ───────────────────────────────────────────────────────── │ │
+│ │ • SQLite (Serverless) │ │
+│ │ • Transactions ACID │ │
+│ │ • Intégrité référentielle │ │
+│ │ • Sauvegarde automatique │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│ │
 └─────────────────────────────────────────────────────────────────────┘
+
+text
+
 ---
 
 ## 🛠️ Stack Technique
@@ -166,7 +171,6 @@ npm run build
 
 # 9. Lancer le serveur de développement
 php artisan serve
-
 👨‍💻 Comptes de Test
 Rôle	Email	Mot de passe
 👑 Super Admin	admin@optizarh.com	password123
@@ -206,7 +210,8 @@ Mesure	Description
 Nom	Rôle
 Mohamed Bouray	Développeur Full Stack
 Sybous Mohamed	Développeur Full Stack
-M. Tarek AIT BAHA	Encadrant Académique (EST Guelmim)
+M. Tarek AIT BAHA	Maître de Conférences, EST Guelmim, Université Ibn Zohr
+M. A. BOUAOUDA	Maître de Conférences, EST Guelmim, Université Ibn Zohr
 M. Yassine AZNAG	Encadrant de Stage (OPTIZAWORKS)
 📄 Licence
 Ce projet est sous licence MIT. Vous êtes libre de l'utiliser, de le modifier et de le distribuer.
