@@ -38,29 +38,14 @@ return new class extends Migration {
 
             $table->string('statut')->default('ACTIF');
 
+            // ✅ AJOUTE COTISATION
+            $table->unsignedBigInteger('cotisation_id')->nullable();
 
-            $table->unsignedBigInteger('cotisation_id')->nullable()->change();
-            $table->foreign('cotisation_id')
-                  ->references('id')
-                  ->on('organisme')
-                  ->onDelete('set null');
             $table->string('temp_password')->nullable();
             $table->timestamp('credentials_sent_at')->nullable();
 
-            
-            // Cotisations
-            // $table->string('cotisation_type')->nullable();
-            // $table->unsignedBigInteger('cotisation_rubrique_id')->nullable();
-            // $table->string('cotisation_label')->nullable();
-            // $table->decimal('cotisation_taux', 5, 2)->nullable();
-
-
-
-
-            // // RCAR
-            // $table->unsignedBigInteger('rcar_type_id')->nullable();
-            // $table->string('rcar_type_label')->nullable();
-            // $table->decimal('rcar_taux', 5, 2)->nullable();
+            // ✅ AJOUTE RCAR_TYPE_ID (décommenté)
+            $table->unsignedBigInteger('rcar_type_id')->nullable();
 
             // Credit
             $table->unsignedBigInteger('credit_type_id')->nullable();
@@ -73,9 +58,6 @@ return new class extends Migration {
             $table->decimal('credit_mensualite', 15, 2)->nullable()->comment('Mensualité calculée');
             $table->decimal('credit_reste_a_payer', 15, 2)->nullable()->comment('Reste à payer');
 
-
-
-
             $table->timestamps();
 
             // Foreign keys
@@ -84,6 +66,7 @@ return new class extends Migration {
             $table->foreign('grade_id')->references('id')->on('grades')->onDelete('set null');
             $table->foreign('echelle_id')->references('id')->on('echelles')->onDelete('set null');
             $table->foreign('echelon_id')->references('id')->on('echelons')->onDelete('set null');
+            $table->foreign('cotisation_id')->references('id')->on('organisme')->onDelete('set null');
             $table->foreign('rcar_type_id')->references('id')->on('rcar_types')->onDelete('set null');
         });
     }
