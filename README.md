@@ -153,26 +153,7 @@ npm run build
 
 # 9. Lancer le serveur de développement
 php artisan serve
-Configuration .env
-env
-APP_NAME=OPTIZARH
-APP_ENV=local
-APP_KEY=
-APP_DEBUG=true
-APP_URL=http://localhost:8000
 
-DB_CONNECTION=sqlite
-# DB_DATABASE=/chemin/absolu/vers/database/database.sqlite
-
-# DB_CONNECTION=mysql
-# DB_HOST=127.0.0.1
-# DB_PORT=3306
-# DB_DATABASE=optizarh
-# DB_USERNAME=root
-# DB_PASSWORD=
-
-SESSION_DRIVER=database
-SESSION_LIFETIME=120
 👨‍💻 Comptes de Test
 Rôle	Email	Mot de passe
 👑 Super Admin	admin@optizarh.com	password123
